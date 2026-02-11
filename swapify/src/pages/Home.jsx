@@ -100,8 +100,19 @@ function Home() {
 
   return (
     <main>
-      <h1>Swapify</h1>
-      <p>Find items students are selling or donating.</p>
+      <nav className="main-nav">
+        <div className="main-nav-left">
+          <h1>Swapify</h1>
+        </div>
+        <div className="main-nav-right">
+          <h2>Sell Items</h2>
+          <h2>Saved</h2>
+          <h2>Messages</h2>
+          <h2>Profile</h2>
+        </div>
+      </nav>
+
+      <p style={{ marginTop: '100px' }}>Find items students are selling or donating.</p>
 
       <button type="button" onClick={handleLoadCount} disabled={isLoading}>
         {isLoading ? 'Loading…' : 'Load city count'}
@@ -123,11 +134,11 @@ function Home() {
         {isLoading ? 'Loading…' : 'Load endpoints'}
       </button>
 
-    <div>
-      <Post></Post>
-      <Post></Post>
-      <Post></Post>
-    </div>
+      <div>
+        <Post></Post>
+        <Post></Post>
+        <Post></Post>
+      </div>
 
       {error && <p>{error}</p>}
       {citiesCount !== null && !error && <p>Total cities: {citiesCount}</p>}
