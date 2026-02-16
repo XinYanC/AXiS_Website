@@ -5,6 +5,33 @@
 Frontend Vite: [swapify](swapify).
 Backend Python: [AXiS](https://github.com/XinYanC/AXiS)
 
+## Running the App
+
+### Frontend (Vite)
+
+From the repo root:
+
+```bash
+cd swapify
+npm install
+npm run dev
+```
+
+Then open the local URL printed in the terminal (usually http://localhost:5173).
+
+Vite requires Node 20.19+. You can upgrade your Node and run using:
+
+```
+nvm install 22
+nvm use 22
+rm -rf node_modules package-lock.json && npm install
+npm run dev
+```
+
+### Backend (AXiS)
+
+The backend lives in the separate [AXiS repo](https://github.com/XinYanC/AXiS). Follow that README to install dependencies, configure environment variables, and start the API server. Once running, make sure the frontend points to the backend base URL as described in the AXiS docs.
+
 ## Project Structure
 
 The repository has two parts: the frontend app in [swapify](swapify) and the backend in the [AXiS repo](https://github.com/XinYanC/AXiS).

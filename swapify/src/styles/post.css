@@ -15,6 +15,31 @@
     margin-bottom: 10px;
 }
 
+.like-button,
+.transaction-button {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.like-button {
+    background-color: #e6e6e6;
+    color: #333;
+}
+
+.transaction-button.pickup {
+    background-color: #b8f2c5;
+    color: #1b5e20;
+}
+
+.transaction-button.buy {
+    background-color: #f7c4d9;
+    color: #7a1c3f;
+}
+
 .post-content {
     font-size: 1em;
     color: #666;
