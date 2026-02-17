@@ -134,7 +134,12 @@ function Home() {
         {isLoading ? 'Loading…' : 'Load endpoints'}
       </button>
 
-      <div>
+      <div className="posts-grid">
+        <Post></Post>
+        <Post></Post>
+        <Post></Post>
+        <Post></Post>
+        <Post></Post>
         <Post></Post>
         <Post></Post>
         <Post></Post>
