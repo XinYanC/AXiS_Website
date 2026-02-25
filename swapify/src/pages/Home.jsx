@@ -44,16 +44,7 @@ function Home() {
             <img src={FullLogo} alt="Swapify" />
           </Link>
         </div>
-        <div className="main-nav-right">
-          <h2>Saved Items</h2>
-          <h2>Messages</h2>
-          <h2>
-            <Link to="/login">Profile</Link>
-          </h2>
-        </div>
-      </nav>
-
-      <div className="search-container">
+        <div className="search-container">
         <input
           type="text"
           className="search-bar"
@@ -62,6 +53,14 @@ function Home() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
+        <div className="main-nav-right">
+          <h2>Saved Items</h2>
+          <h2>Messages</h2>
+          <h2>
+            <Link to="/login">Profile</Link>
+          </h2>
+        </div>
+      </nav>
 
       <div className="posts-grid">
         {listings.length > 0 ? (
