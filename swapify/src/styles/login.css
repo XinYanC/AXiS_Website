@@ -6,6 +6,24 @@
     height: 100vh;
 }
 
+.login-logo {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+}
+
+.login-logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.login-logo img {
+    height: 60px;
+    width: auto;
+}
+
 .login-form {
     display: flex;
     flex-direction: column;
@@ -13,6 +31,8 @@
     justify-content: center;
     gap: 10px;
     padding-bottom: 20px;
+    width: 400px;
+    max-width: 90%;
 }
 
 .login-form input {

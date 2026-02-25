@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getCitiesCount } from '../api/cities'
 import { getCountriesCount } from '../api/countries'
 import { getStatesCount } from '../api/states'
 import { getEndpoints, getHello } from '../api/system'
 import Post from '../components/Post'
+import FullLogo from '../assets/FullLogo.PNG'
 
 function Home() {
   const [citiesCount, setCitiesCount] = useState(null)
@@ -102,13 +104,17 @@ function Home() {
     <main>
       <nav className="main-nav">
         <div className="main-nav-left">
-          <h1>Swapify</h1>
+          <Link to="/">
+            <img src={FullLogo} alt="Swapify" />
+          </Link>
         </div>
         <div className="main-nav-right">
           <h2>Sell Items</h2>
           <h2>Saved</h2>
           <h2>Messages</h2>
-          <h2>Profile</h2>
+          <h2>
+            <Link to="/login">Profile</Link>
+          </h2>
         </div>
       </nav>
 

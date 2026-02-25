@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../styles/login.css'
+import FullLogo from '../assets/FullLogo.PNG'
 
 const Login = () => {
     const [email, setEmail] = useState('')
@@ -12,6 +13,11 @@ const Login = () => {
 
     return (
         <div className="login-container">
+            <div className="login-logo">
+                <Link to="/">
+                    <img src={FullLogo} alt="Swapify" />
+                </Link>
+            </div>
             <h1>Login</h1>
             <form onSubmit={handleSubmit} className="login-form">
                 <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
