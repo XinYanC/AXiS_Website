@@ -76,6 +76,15 @@ const Post = ({
     const [liked, setLiked] = useState(false);
     const navigate = useNavigate();
 
+    const numericPrice = Number(price);
+    const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0;
+    const formattedPrice = hasPrice
+        ? `$${numericPrice.toLocaleString(undefined, {
+            minimumFractionDigits: numericPrice % 1 === 0 ? 0 : 2,
+            maximumFractionDigits: 2,
+        })}`
+        : null;
+
     const handleLike = (e) => {
         e.stopPropagation(); // Prevent triggering post click
         setLiked(!liked);
@@ -131,6 +140,7 @@ const Post = ({
             <div className="post-title">
                 {title}
             </div>
+            {hasPrice && <p className="post-price-tag">{formattedPrice}</p>}
             {description && <p className="post-description">{description}</p>}
             {location && (
                 <p className="post-location">
