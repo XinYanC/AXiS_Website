@@ -1,14 +1,28 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { authLogin } from '../api'
 import '../styles/login.css'
 import FullLogo from '../assets/FullLogo.PNG'
 
 const Login = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
+        setError('')
+        setLoading(true)
+        try {
+            await authLogin({ email, password })
+            navigate('/', { replace: true })
+        } catch (err) {
+            setError(err.message || 'Login failed')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -20,9 +34,10 @@ const Login = () => {
             </div>
             <h1>Login</h1>
             <form onSubmit={handleSubmit} className="login-form">
-                <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                <button type="submit">Login</button>
+                {error && <p className="login-error" role="alert">{error}</p>}
+                <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <button type="submit" disabled={loading}>{loading ? 'Logging in…' : 'Login'}</button>
             </form>
             <p>Don't have an account? <Link to="/register" className="register-link">Register</Link></p>
         </div>

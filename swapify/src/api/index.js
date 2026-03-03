@@ -34,4 +34,5 @@ export {
 	readListings,
 	searchListings,
 } from './listings'
+export { authLogin } from './auth'
 export { getHello, getEndpoints } from './system'
