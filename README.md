@@ -28,6 +28,18 @@ rm -rf node_modules package-lock.json && npm install
 npm run dev
 ```
 
+# Run with local backend (http://127.0.0.1:8000)
+npm run dev:local
+
+# Run with cloud backend (https://xinyanc.pythonanywhere.com)
+npm run dev:cloud
+
+# Build for local deployment
+npm run build:local
+
+# Build for cloud deployment
+npm run build:cloud
+
 ### Backend (AXiS)
 
 The backend lives in the separate [AXiS repo](https://github.com/XinYanC/AXiS). Follow that README to install dependencies, configure environment variables, and start the API server. Once running, make sure the frontend points to the backend base URL as described in the AXiS docs.
