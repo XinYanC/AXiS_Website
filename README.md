@@ -29,16 +29,40 @@ npm run dev
 ```
 
 # Run with local backend (http://127.0.0.1:8000)
+```
 npm run dev:local
+```
+OR
+```
+make dev-local
+```
 
 # Run with cloud backend (https://xinyanc.pythonanywhere.com)
+```
 npm run dev:cloud
+```
+OR
+```
+make dev-cloud
+```
 
 # Build for local deployment
+```
 npm run build:local
+```
+OR
+```
+make build-local
+```
 
 # Build for cloud deployment
+```
 npm run build:cloud
+```
+OR
+```
+make build-cloud
+```
 
 ### Backend (AXiS)
 
