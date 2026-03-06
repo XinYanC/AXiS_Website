@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { readListings } from '../api/listings'
+import { readListings, searchListings } from '../api/listings'
 import Post from '../components/post'
 import CreateListing from '../components/CreateListing'
 import FullLogo from '../assets/FullLogo.PNG'
@@ -35,6 +35,28 @@ function Home() {
   useEffect(() => {
     fetchListings()
   }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!searchQuery) {
+        fetchListings()
+        return
+      }
+      try {
+        const data = await searchListings(searchQuery)
+        let listingsArray = []
+        if (data && data.Listings) {
+          listingsArray = Object.values(data.Listings)
+        } else if (Array.isArray(data)) {
+          listingsArray = data
+        }
+        setListings(listingsArray)
+      } catch (err) {
+        console.error('Search failed:', err)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   return (
     <main>
