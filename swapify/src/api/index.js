@@ -32,6 +32,7 @@ export {
 	createListing,
 	deleteListing,
 	readListings,
+	readListingById,
 	searchListings,
 } from './listings'
 export { authLogin } from './auth'

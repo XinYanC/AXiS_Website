@@ -12,5 +12,21 @@ export const deleteListing = (id) =>
 
 export const readListings = () => apiGet('/listings/read')
 
+export const readListingById = async (id) => {
+	const response = await readListings()
+	const listingsArray = response && response.Listings
+		? Object.values(response.Listings)
+		: Array.isArray(response)
+			? response
+			: []
+
+	const normalizedId = String(id || '')
+
+	return (
+		listingsArray.find((listing) => String(listing?._id || listing?.id || '') === normalizedId) ||
+		null
+	)
+}
+
 export const searchListings = (searchTerm) =>
 	apiGet(`/listings/search?q=${encodeURIComponent(searchTerm)}`)
