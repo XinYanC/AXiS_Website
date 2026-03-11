@@ -6,10 +6,23 @@ import CreateListing from '../components/CreateListing'
 import FullLogo from '../assets/FullLogo.PNG'
 import '../styles/createListing.css'
 
+const getAuthState = () => {
+  const isLoggedIn = localStorage.getItem('swapify.authenticated') === 'true'
+  const username = localStorage.getItem('swapify.username') || ''
+  const email = localStorage.getItem('swapify.email') || ''
+
+  return {
+    isLoggedIn,
+    username,
+    email,
+  }
+}
+
 function Home() {
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [listings, setListings] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [authState, setAuthState] = useState(getAuthState)
 
   const fetchListings = async () => {
     try {
@@ -62,6 +75,26 @@ function Home() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
+  useEffect(() => {
+    const syncAuthState = () => {
+      setAuthState(getAuthState())
+    }
+
+    window.addEventListener('storage', syncAuthState)
+    window.addEventListener('focus', syncAuthState)
+
+    return () => {
+      window.removeEventListener('storage', syncAuthState)
+      window.removeEventListener('focus', syncAuthState)
+    }
+  }, [])
+
+  const profileIdentifier = authState.username || authState.email
+
+  const profilePath = profileIdentifier
+    ? `/profile/${encodeURIComponent(profileIdentifier)}`
+    : '/login'
+
   return (
     <main>
       <nav className="main-nav">
@@ -80,11 +113,19 @@ function Home() {
           />
         </div>
         <div className="main-nav-right">
-          <h2>Saved Items</h2>
-          <h2>Messages</h2>
-          <h2>
-            <Link to="/login">Profile</Link>
-          </h2>
+          {authState.isLoggedIn ? (
+            <>
+              <h2>Saved Items</h2>
+              <h2>Messages</h2>
+              <h2>
+                <Link to={profilePath}>Profile</Link>
+              </h2>
+            </>
+          ) : (
+            <Link to="/login" className="nav-login-button">
+              Login
+            </Link>
+          )}
         </div>
       </nav>
 

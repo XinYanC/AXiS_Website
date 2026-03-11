@@ -60,6 +60,13 @@ const LocationIcon = () => (
     </svg>
 );
 
+const CameraIcon = () => (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
 const Post = ({
     id,
     title,
@@ -72,6 +79,7 @@ const Post = ({
     sellerRating = 4.8
 }) => {
     const [liked, setLiked] = useState(false);
+    const [imageError, setImageError] = useState(false);
     const navigate = useNavigate();
 
     const numericPrice = Number(price);
@@ -82,10 +90,15 @@ const Post = ({
             maximumFractionDigits: 2,
         })}`
         : null;
+    
+    const formatTransactionType = (type) => {
+        return type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ');
+    };
+    
     const displayOwner = owner || 'Unknown User';
 
     const handleLike = (e) => {
-        e.stopPropagation(); // Prevent triggering post click
+        e.stopPropagation();
         setLiked(!liked);
     };
 
@@ -96,13 +109,16 @@ const Post = ({
     };
 
     const handleSellerClick = (e) => {
-        e.stopPropagation(); // Prevent triggering post click
+        e.stopPropagation();
         if (owner) {
             navigate(`/profile/${encodeURIComponent(owner)}`);
         }
     };
 
-    // Get transaction icon based on type
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
     const getTransactionIcon = (type) => {
         switch (type.toLowerCase()) {
             case 'pickup':
@@ -122,41 +138,56 @@ const Post = ({
         }
     };
 
-    // Get seller initials for avatar
     const getSellerInitials = (name) => {
         if (!name) return '?';
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     };
 
-    // Don't render if there's no title
     if (!title) {
         return null;
     }
 
     return (
         <div onClick={handleOpenPost} className="post-container">
-            {imageUrl && <img src={imageUrl} alt={title} />}
-            <div className="post-title">
-                {title}
+            <div className="post-image-container">
+                {imageUrl && !imageError ? (
+                    <img 
+                        src={imageUrl} 
+                        alt={title} 
+                        onError={handleImageError}
+                        className="post-image"
+                    />
+                ) : (
+                    <div className="image-placeholder">
+                        <CameraIcon />
+                    </div>
+                )}
+                
+                {/* Price/Type overlay on image */}
+                <div className="price-overlay">
+                    {hasPrice ? formattedPrice : formatTransactionType(transactionType)}
+                </div>
             </div>
-            {hasPrice && <p className="post-price-tag">{formattedPrice}</p>}
-            {description && <p className="post-description">{description}</p>}
-            {location && (
-                <p className="post-location">
-                    <LocationIcon />
-                    <span>{location}</span>
-                </p>
-            )}
+            
+            {/* <div className="post-title">
+                {title}
+            </div> */}
+            
+            <div className="post-actions-row">
+                {location && (
+                    <p className="post-location">
+                        <LocationIcon />
+                        <span>{location}</span>
+                    </p>
+                )}
+                <button
+                    onClick={handleLike}
+                    className={`like-button ${liked ? 'liked' : ''}`}
+                >
+                    <HeartIcon />
+                </button>
+            </div>
 
-            {/* Like button - just heart icon, no count */}
-            <button
-                onClick={handleLike}
-                className={`like-button ${liked ? 'liked' : ''}`}
-            >
-                <HeartIcon />
-            </button>
-
-            {/* Seller Info Section - Clickable to profile */}
             <div className="post-seller" onClick={handleSellerClick}>
                 <div className="seller-info">
                     <div className="seller-avatar">
@@ -171,7 +202,6 @@ const Post = ({
                     </div>
                 </div>
 
-                {/* Transaction Icon */}
                 <div className={`transaction-icon ${transactionType}`}>
                     {getTransactionIcon(transactionType)}
                 </div>

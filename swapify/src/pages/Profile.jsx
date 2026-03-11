@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Post from '../components/post'; // Your existing Post component
 import { readUsers } from '../api/users';
 import { readListings } from '../api/listings';
@@ -32,6 +32,7 @@ const VerifiedIcon = () => (
 
 const Profile = () => {
     const { username } = useParams();
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [listings, setListings] = useState([]);
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'sold'
@@ -44,6 +45,14 @@ const Profile = () => {
             .trim()
             .replace(/^@+/, '')
             .toLowerCase();
+
+    const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
+    const getCandidateUsername = (candidate) =>
+        normalizeUsername(candidate?.username || candidate?.Username || candidate?.user_name || '');
+
+    const getCandidateEmail = (candidate) =>
+        normalizeEmail(candidate?.email || candidate?.Email || candidate?.user_email || '');
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -74,11 +83,24 @@ const Profile = () => {
                         ? listingsResponse
                         : [];
 
-                const targetUsername = normalizeUsername(username);
+                const routeIdentifier = String(username || '').trim();
+                const storedUsername = normalizeUsername(localStorage.getItem('swapify.username'));
+                const storedEmail = normalizeEmail(localStorage.getItem('swapify.email'));
+                const routeAsUsername = normalizeUsername(routeIdentifier);
+                const routeAsEmail = normalizeEmail(routeIdentifier);
 
-                const profileUser = usersArray.find(
-                    (candidate) => normalizeUsername(candidate.username) === targetUsername
-                );
+                const candidateUsernames = [routeAsUsername, storedUsername].filter(Boolean);
+                const candidateEmails = [routeAsEmail, storedEmail].filter(Boolean);
+
+                const profileUser = usersArray.find((candidate) => {
+                    const candidateUsername = getCandidateUsername(candidate);
+                    const candidateEmail = getCandidateEmail(candidate);
+
+                    const usernameMatch = candidateUsernames.includes(candidateUsername);
+                    const emailMatch = candidateEmail && candidateEmails.includes(candidateEmail);
+
+                    return usernameMatch || emailMatch;
+                });
 
                 if (!profileUser) {
                     setUser(null);
@@ -87,8 +109,9 @@ const Profile = () => {
                     return;
                 }
 
+                const profileUsername = getCandidateUsername(profileUser);
                 const userListings = allListings.filter(
-                    (listing) => normalizeUsername(listing.owner) === targetUsername
+                    (listing) => normalizeUsername(listing.owner) === profileUsername
                 );
                 const soldCount = userListings.filter((listing) => listing.status === 'sold').length;
                 const activeCount = userListings.filter((listing) => listing.status !== 'sold').length;
@@ -100,8 +123,8 @@ const Profile = () => {
 
                 const normalizedUser = {
                     ...profileUser,
-                    name: profileUser.name || profileUser.username || username,
-                    username: normalizeUsername(profileUser.username || username),
+                    name: profileUser.name || profileUser.username || profileUser.Username || username,
+                    username: getCandidateUsername(profileUser) || normalizeUsername(username),
                     location: profileUser.location || 'Unknown location',
                     memberSince: profileUser.memberSince || profileUser.member_since || 'N/A',
                     rating: Number(profileUser.rating) || 0,
@@ -141,6 +164,13 @@ const Profile = () => {
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('swapify.authenticated');
+        localStorage.removeItem('swapify.username');
+        localStorage.removeItem('swapify.email');
+        navigate('/login', { replace: true });
+    };
+
     if (loading) {
         return (
             <>
@@ -163,7 +193,7 @@ const Profile = () => {
                         <h2>Saved Items</h2>
                         <h2>Messages</h2>
                         <h2>
-                            <Link to={username ? `/profile/${encodeURIComponent(normalizeUsername(username))}` : '/login'}>Profile</Link>
+                            <button type="button" className="nav-logout-button" onClick={handleLogout}>Logout</button>
                         </h2>
                     </div>
                 </nav>
@@ -196,7 +226,7 @@ const Profile = () => {
                         <h2>Saved Items</h2>
                         <h2>Messages</h2>
                         <h2>
-                            <Link to={username ? `/profile/${encodeURIComponent(normalizeUsername(username))}` : '/login'}>Profile</Link>
+                            <button type="button" className="nav-logout-button" onClick={handleLogout}>Logout</button>
                         </h2>
                     </div>
                 </nav>
@@ -229,7 +259,7 @@ const Profile = () => {
                     <h2>Saved Items</h2>
                     <h2>Messages</h2>
                     <h2>
-                        <Link to={`/profile/${encodeURIComponent(user.username)}`}>Profile</Link>
+                        <button type="button" className="nav-logout-button" onClick={handleLogout}>Logout</button>
                     </h2>
                 </div>
             </nav>

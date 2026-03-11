@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { authLogin } from '../api'
+import { authLogin, readUsers } from '../api'
 import '../styles/login.css'
 import FullLogo from '../assets/FullLogo.PNG'
 
@@ -16,7 +16,52 @@ const Login = () => {
         setError('')
         setLoading(true)
         try {
-            await authLogin({ email, password })
+            const response = await authLogin({ email, password })
+
+            const responseUser =
+                response?.user ||
+                response?.User ||
+                response?.data?.user ||
+                response?.data?.User ||
+                null
+
+            let username =
+                responseUser?.username || response?.username || ''
+            const resolvedEmail =
+                responseUser?.email || response?.email || email
+
+            if (!username && resolvedEmail) {
+                try {
+                    const usersResponse = await readUsers()
+                    const usersArray = usersResponse && (usersResponse.Users || usersResponse.User)
+                        ? Object.values(usersResponse.Users || usersResponse.User)
+                        : Array.isArray(usersResponse)
+                            ? usersResponse
+                            : []
+
+                    const targetEmail = String(resolvedEmail).trim().toLowerCase()
+                    const matchedUser = usersArray.find((candidate) => {
+                        const candidateEmail = String(candidate?.email || candidate?.Email || '').trim().toLowerCase()
+                        return candidateEmail && candidateEmail === targetEmail
+                    })
+
+                    if (matchedUser?.username || matchedUser?.Username) {
+                        username = matchedUser.username || matchedUser.Username
+                    }
+                } catch (lookupErr) {
+                    console.warn('Could not resolve username from users list:', lookupErr)
+                }
+            }
+
+            localStorage.setItem('swapify.authenticated', 'true')
+            localStorage.removeItem('swapify.username')
+            if (username) {
+                localStorage.setItem('swapify.username', String(username))
+            }
+            if (resolvedEmail) {
+                localStorage.setItem('swapify.email', String(resolvedEmail))
+            }
+
             navigate('/', { replace: true })
         } catch (err) {
             setError(err.message || 'Login failed')
