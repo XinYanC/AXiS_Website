@@ -15,7 +15,7 @@ function Home() {
     try {
       const data = await readListings()
       console.log('Listings data received:', data)
-      
+
       // Handle the response structure: { "Listings": { id: {...}, ... }, "Number of Records": X }
       let listingsArray = []
       if (data && data.Listings) {
@@ -24,7 +24,7 @@ function Home() {
       } else if (Array.isArray(data)) {
         listingsArray = data
       }
-      
+
       console.log('Listings array:', listingsArray)
       setListings(listingsArray)
     } catch (err) {
@@ -33,7 +33,11 @@ function Home() {
   }
 
   useEffect(() => {
-    fetchListings()
+    const loadListings = async () => {
+      await fetchListings()
+    }
+
+    loadListings()
   }, [])
 
   useEffect(() => {
@@ -67,14 +71,14 @@ function Home() {
           </Link>
         </div>
         <div className="search-container">
-        <input
-          type="text"
-          className="search-bar"
-          placeholder="Search listings..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+          <input
+            type="text"
+            className="search-bar"
+            placeholder="Search listings..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         <div className="main-nav-right">
           <h2>Saved Items</h2>
           <h2>Messages</h2>

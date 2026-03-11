@@ -2,15 +2,13 @@
   "name": "swapify",
   "private": true,
   "version": "0.0.0",
-  "type": "module",  
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:local": "./scripts/local.sh",
-    "dev:cloud": "./scripts/cloud.sh",
     "build": "vite build",
-    "build:local": "REACT_APP_API_URL=http://127.0.0.1:8000 REACT_APP_ENVIRONMENT=local vite build",
-    "build:cloud": "REACT_APP_API_URL=https://xinyanc.pythonanywhere.com REACT_APP_ENVIRONMENT=production vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src --max-warnings=0",
+    "test": "echo \"No frontend tests defined yet\" && exit 0"
   },
   "dependencies": {
     "react": "^19.2.0",

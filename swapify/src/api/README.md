@@ -1,2 +1,2 @@
-API helpers and endpoint wrappers live here.
-Set VITE_API_BASE_URL in .env to override the default base URL.
+API helpers and endpoint wrappers live here. 
+Set `REACT_APP_API_URL` via local.sh or cloud.sh

@@ -14,6 +14,17 @@ From the repo root:
 ```bash
 cd swapify
 npm install
+```
+
+# Run with local backend (http://127.0.0.1:8000)
+```
+source local.sh
+npm run dev
+```
+
+# Run with cloud backend (https://xinyanc.pythonanywhere.com)
+```
+source cloud.sh
 npm run dev
 ```
 
@@ -28,40 +39,9 @@ rm -rf node_modules package-lock.json && npm install
 npm run dev
 ```
 
-# Run with local backend (http://127.0.0.1:8000)
+# Production build
 ```
-npm run dev:local
-```
-OR
-```
-make dev-local
-```
-
-# Run with cloud backend (https://xinyanc.pythonanywhere.com)
-```
-npm run dev:cloud
-```
-OR
-```
-make dev-cloud
-```
-
-# Build for local deployment
-```
-npm run build:local
-```
-OR
-```
-make build-local
-```
-
-# Build for cloud deployment
-```
-npm run build:cloud
-```
-OR
-```
-make build-cloud
+npm run build
 ```
 
 ### Backend (AXiS)
