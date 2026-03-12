@@ -17,16 +17,22 @@ npm install
 ```
 
 # Run with local backend (http://127.0.0.1:8000)
+
 ```
-source local.sh
-npm run dev
+nvm use 22
+source ./local.sh
 ```
 
+`local.sh` sets the environment variables and starts the Vite dev server.
+
 # Run with cloud backend (https://xinyanc.pythonanywhere.com)
+
 ```
-source cloud.sh
-npm run dev
+nvm use 22
+source ./cloud.sh
 ```
+
+`cloud.sh` sets the environment variables and starts the Vite dev server.
 
 Then open the local URL printed in the terminal (usually http://localhost:5173).
 
@@ -40,6 +46,7 @@ npm run dev
 ```
 
 # Production build
+
 ```
 npm run build
 ```
