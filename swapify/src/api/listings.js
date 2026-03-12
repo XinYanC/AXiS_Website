@@ -12,6 +12,27 @@ export const deleteListing = (id) =>
 
 export const readListings = () => apiGet('/listings/read')
 
+export const readListingsByUser = async (username) => {
+	const normalizedUsername = String(username || '').trim()
+	if (!normalizedUsername) {
+		throw new Error('Username is required to fetch user listings')
+	}
+
+	const encodedUsername = encodeURIComponent(normalizedUsername)
+
+	try {
+		// Current deployed backend uses kebab-case.
+		return await apiGet(`/listings/by-user?username=${encodedUsername}`)
+	} catch (err) {
+		// Compatibility fallback for deployments using underscore naming.
+		if (err instanceof Error && err.message.includes('API error (404)')) {
+			return apiGet(`/listings/by_user?username=${encodedUsername}`)
+		}
+
+		throw err
+	}
+}
+
 export const readListingById = async (id) => {
 	const response = await readListings()
 	const listingsArray = response && response.Listings

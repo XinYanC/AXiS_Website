@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Post from '../components/post'; // Your existing Post component
 import { readUsers } from '../api/users';
-import { readListings } from '../api/listings';
+import { readListingsByUser } from '../api/listings';
 import FullLogo from '../assets/FullLogo.PNG';
 import '../styles/profile.css';
 
@@ -66,21 +66,12 @@ const Profile = () => {
             setError('');
 
             try {
-                const [usersResponse, listingsResponse] = await Promise.all([
-                    readUsers(),
-                    readListings(),
-                ]);
+                const usersResponse = await readUsers();
 
                 const usersArray = usersResponse && (usersResponse.Users || usersResponse.User)
                     ? Object.values(usersResponse.Users || usersResponse.User)
                     : Array.isArray(usersResponse)
                         ? usersResponse
-                        : [];
-
-                const allListings = listingsResponse && listingsResponse.Listings
-                    ? Object.values(listingsResponse.Listings)
-                    : Array.isArray(listingsResponse)
-                        ? listingsResponse
                         : [];
 
                 const routeIdentifier = String(username || '').trim();
@@ -109,7 +100,14 @@ const Profile = () => {
                     return;
                 }
 
-                const profileUsername = getCandidateUsername(profileUser);
+                const profileUsername = getCandidateUsername(profileUser) || routeAsUsername;
+                const listingsResponse = await readListingsByUser(profileUsername);
+                const allListings = listingsResponse && listingsResponse.Listings
+                    ? Object.values(listingsResponse.Listings)
+                    : Array.isArray(listingsResponse)
+                        ? listingsResponse
+                        : [];
+
                 const userListings = allListings.filter(
                     (listing) => normalizeUsername(listing.owner) === profileUsername
                 );
@@ -142,7 +140,7 @@ const Profile = () => {
                 setListings(userListings);
             } catch (err) {
                 console.error('Failed to load profile data:', err);
-                setError('Failed to load profile data.');
+                setError('');
                 setUser(null);
                 setListings([]);
             } finally {
@@ -231,7 +229,7 @@ const Profile = () => {
                     </div>
                 </nav>
                 <div className="profile-error">
-                    <h2>{error || 'User not found'}</h2>
+                    <h2>{error === 'User not found' ? 'User not found' : 'Unable to load profile'}</h2>
                     <p>The profile you're looking for doesn't exist or could not be loaded.</p>
                 </div>
             </>

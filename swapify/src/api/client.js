@@ -1,25 +1,33 @@
 // Backend URL from env var set in local.sh or cloud.sh
 const API_BASE_URL = import.meta.env.REACT_APP_API_URL ?? 'http://127.0.0.1:8000'
 
-const defaultHeaders = {
-  'Content-Type': 'application/json',
-}
-
 export async function apiRequest(path, options = {}) {
   const url = `${API_BASE_URL}${path}`
+
+  const headers = {
+    ...(options.body != null ? { 'Content-Type': 'application/json' } : {}),
+    ...(options.headers ?? {}),
+  }
 
   // Add debug logging in development
   if (import.meta.env.REACT_APP_ENVIRONMENT === 'local' || import.meta.env.DEV) {
     console.log(`API Request: ${options.method || 'GET'} ${url}`)
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...(options.headers ?? {}),
-    },
-  })
+  let response
+
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown network error'
+    throw new Error(
+      `Network error while requesting ${url}: ${message}. ` +
+      'Check REACT_APP_API_URL and confirm the backend is reachable.'
+    )
+  }
 
   if (!response.ok) {
     const errorText = await response.text()

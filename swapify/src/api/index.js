@@ -33,6 +33,7 @@ export {
 	createListing,
 	deleteListing,
 	readListings,
+	readListingsByUser,
 	readListingById,
 	searchListings,
 	updateListing,
