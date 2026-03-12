@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost } from './client'
+import { apiDelete, apiGet, apiPost, apiPut } from './client'
 
 export const getUsersCount = () => apiGet('/users/count')
 
@@ -14,3 +14,6 @@ export const readUsers = () => apiGet('/users/read')
 
 export const searchUsers = (searchTerm) =>
 	apiGet(`/users/search?q=${encodeURIComponent(searchTerm)}`)
+
+export const updateUser = (usernameOrId, payload) =>
+	apiPut(`/users/update?username=${encodeURIComponent(usernameOrId)}`, payload)
