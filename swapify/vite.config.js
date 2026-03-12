@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   // Load env files
   const env = loadEnv(mode, process.cwd(), '')
-  
+
   // Make REACT_APP_ variables available to import.meta.env
   const envWithReactPrefix = Object.keys(env).reduce((acc, key) => {
     if (key.startsWith('REACT_APP_')) {
@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    define: envWithReactPrefix
+    define: envWithReactPrefix,
+    test: {
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.js',
+      include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+      exclude: ['src/api/__tests__/**'],
+    },
   }
 })

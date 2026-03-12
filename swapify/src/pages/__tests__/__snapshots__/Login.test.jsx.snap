@@ -1,0 +1,57 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Login page > matches snapshot 1`] = `
+<div>
+  <div
+    class="login-container"
+  >
+    <div
+      class="login-logo"
+    >
+      <a
+        data-discover="true"
+        href="/"
+      >
+        <img
+          alt="Swapify"
+          src="/src/assets/FullLogo.PNG"
+        />
+      </a>
+    </div>
+    <h1>
+      Login
+    </h1>
+    <form
+      class="login-form"
+    >
+      <input
+        placeholder="Email"
+        required=""
+        type="email"
+        value=""
+      />
+      <input
+        placeholder="Password"
+        required=""
+        type="password"
+        value=""
+      />
+      <button
+        type="submit"
+      >
+        Login
+      </button>
+    </form>
+    <p>
+      Don't have an account? 
+      <a
+        class="register-link"
+        data-discover="true"
+        href="/register"
+      >
+        Register
+      </a>
+    </p>
+  </div>
+</div>
+`;

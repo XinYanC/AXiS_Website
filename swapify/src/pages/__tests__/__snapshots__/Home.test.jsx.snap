@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Home page > matches snapshot 1`] = `
+<div>
+  <main>
+    <nav
+      class="main-nav"
+    >
+      <div
+        class="main-nav-left"
+      >
+        <a
+          data-discover="true"
+          href="/"
+        >
+          <img
+            alt="Swapify"
+            src="/src/assets/FullLogo.PNG"
+          />
+        </a>
+      </div>
+      <div
+        class="search-container"
+      >
+        <input
+          class="search-bar"
+          placeholder="Search listings..."
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="main-nav-right"
+      >
+        <a
+          class="nav-login-button"
+          data-discover="true"
+          href="/login"
+        >
+          Login
+        </a>
+      </div>
+    </nav>
+    <div
+      class="posts-grid"
+    >
+      <p>
+        No listings available yet. Create one to get started!
+      </p>
+    </div>
+    <button
+      aria-label="Create new listing"
+      class="floating-add-button"
+    >
+      +
+    </button>
+  </main>
+</div>
+`;

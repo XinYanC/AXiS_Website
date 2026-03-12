@@ -1,0 +1,87 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Register page > matches snapshot 1`] = `
+<div>
+  <div
+    class="register-container"
+  >
+    <div
+      class="register-logo"
+    >
+      <a
+        data-discover="true"
+        href="/"
+      >
+        <img
+          alt="Swapify"
+          src="/src/assets/FullLogo.PNG"
+        />
+      </a>
+    </div>
+    <h1>
+      Register
+    </h1>
+    <form
+      class="register-form"
+    >
+      <input
+        placeholder="Email"
+        required=""
+        type="email"
+        value=""
+      />
+      <input
+        placeholder="Password"
+        required=""
+        type="password"
+        value=""
+      />
+      <input
+        placeholder="Name"
+        required=""
+        type="text"
+        value=""
+      />
+      <input
+        placeholder="Username"
+        required=""
+        type="text"
+        value=""
+      />
+      <input
+        placeholder="Age"
+        required=""
+        type="number"
+        value=""
+      />
+      <input
+        placeholder="Bio"
+        required=""
+        type="text"
+        value=""
+      />
+      <input
+        placeholder="Location (e.g., NY,USA)"
+        required=""
+        type="text"
+        value=""
+      />
+      <button
+        type="submit"
+      >
+        Register
+      </button>
+    </form>
+    <p>
+      Already have an account? 
+      <a
+        class="login-link"
+        data-discover="true"
+        href="/login"
+      >
+        Login
+      </a>
+    </p>
+  </div>
+</div>
+`;

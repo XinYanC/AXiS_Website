@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NotFound page > matches snapshot 1`] = `
+<div>
+  <main
+    style="text-align: center; padding: 4rem;"
+  >
+    <h1>
+      404 — Page not found
+    </h1>
+    <p>
+      The page you're looking for doesn't exist.
+    </p>
+    <a
+      data-discover="true"
+      href="/"
+    >
+      Go back home
+    </a>
+  </main>
+</div>
+`;
