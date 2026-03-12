@@ -26,6 +26,7 @@ export {
 	deleteUser,
 	readUsers,
 	searchUsers,
+	updateUser,
 } from './users'
 export {
 	getListingsCount,
@@ -34,6 +35,7 @@ export {
 	readListings,
 	readListingById,
 	searchListings,
+	updateListing,
 } from './listings'
 export { authLogin } from './auth'
-export { getHello, getEndpoints } from './system'
+export { getEndpoints } from './system'

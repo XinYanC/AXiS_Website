@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost } from './client'
+import { apiDelete, apiGet, apiPost, apiPut } from './client'
 
 export const getListingsCount = () => apiGet('/listings/count')
 
@@ -30,3 +30,6 @@ export const readListingById = async (id) => {
 
 export const searchListings = (searchTerm) =>
 	apiGet(`/listings/search?q=${encodeURIComponent(searchTerm)}`)
+
+export const updateListing = (id, payload) =>
+	apiPut(`/listings/update?id=${encodeURIComponent(id)}`, payload)

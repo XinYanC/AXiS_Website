@@ -48,6 +48,13 @@ export const apiPost = (path, body, options = {}) =>
     body: JSON.stringify(body),
   })
 
+export const apiPut = (path, body, options = {}) =>
+  apiRequest(path, {
+    ...options,
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+
 export const apiDelete = (path, options = {}) =>
   apiRequest(path, {
     ...options,
