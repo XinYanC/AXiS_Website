@@ -45,6 +45,29 @@ rm -rf node_modules package-lock.json && npm install
 npm run dev
 ```
 
+# Run tests
+
+Requires Node 22 (same as dev):
+
+```
+nvm use 22
+cd swapify
+npm test
+```
+
+To run a specific subset of tests (e.g. only pages or only API):
+
+```
+npm test -- src/pages
+npm test -- src/api
+```
+
+To run in watch mode during development:
+
+```
+npm run test:watch
+```
+
 # Production build
 
 ```

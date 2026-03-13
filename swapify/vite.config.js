@@ -20,7 +20,6 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './src/test/setup.js',
       include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
-      exclude: ['src/api/__tests__/**'],
     },
   }
 })
