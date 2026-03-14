@@ -1,9 +1,17 @@
-import { describe, it, expect } from 'vitest'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { render, screen } from '@testing-library/react'
 import App from '../App.jsx'
 
 describe('App routing', () => {
+  beforeEach(() => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('renders Home at root path', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
@@ -12,6 +20,7 @@ describe('App routing', () => {
     )
 
     expect(screen.getByRole('img', { name: /swapify/i })).toBeInTheDocument()
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 
   it('renders NotFound for unknown route', () => {
@@ -22,6 +31,7 @@ describe('App routing', () => {
     )
 
     expect(screen.getByText(/404/i)).toBeInTheDocument()
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 })
 

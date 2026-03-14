@@ -31,6 +31,7 @@ export {
 export {
 	getListingsCount,
 	createListing,
+	uploadListingImage,
 	deleteListing,
 	readListings,
 	readListingsByUser,

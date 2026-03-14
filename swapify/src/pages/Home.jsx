@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { readListings, searchListings } from '../api/listings'
+import Navbar from '../components/Navbar'
 import Post from '../components/post'
 import CreateListing from '../components/CreateListing'
-import FullLogo from '../assets/FullLogo.PNG'
+import { getListingImageUrls } from '../utils/images'
 import '../styles/createListing.css'
 
 const getAuthState = () => {
@@ -89,45 +89,9 @@ function Home() {
     }
   }, [])
 
-  const profileIdentifier = authState.username || authState.email
-
-  const profilePath = profileIdentifier
-    ? `/profile/${encodeURIComponent(profileIdentifier)}`
-    : '/login'
-
   return (
     <main>
-      <nav className="main-nav">
-        <div className="main-nav-left">
-          <Link to="/">
-            <img src={FullLogo} alt="Swapify" />
-          </Link>
-        </div>
-        <div className="search-container">
-          <input
-            type="text"
-            className="search-bar"
-            placeholder="Search listings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="main-nav-right">
-          {authState.isLoggedIn ? (
-            <>
-              <h2>Saved Items</h2>
-              <h2>Messages</h2>
-              <h2>
-                <Link to={profilePath}>Profile</Link>
-              </h2>
-            </>
-          ) : (
-            <Link to="/login" className="nav-login-button">
-              Login
-            </Link>
-          )}
-        </div>
-      </nav>
+      <Navbar searchQuery={searchQuery} onSearchChange={(e) => setSearchQuery(e.target.value)} />
 
       <div className="posts-grid">
         {listings.length > 0 ? (
@@ -137,7 +101,7 @@ function Home() {
               id={listing._id}
               title={listing.title}
               description={listing.description}
-              imageUrl={listing.images && listing.images.length > 0 ? listing.images[0] : null}
+              imageUrls={getListingImageUrls(listing)}
               location={listing.meetup_location}
               transactionType={listing.transaction_type}
               price={listing.price}
@@ -161,6 +125,8 @@ function Home() {
         isOpen={isCreateListingOpen}
         onClose={() => setIsCreateListingOpen(false)}
         onSuccess={fetchListings}
+        isLoggedIn={authState.isLoggedIn}
+        currentUserIdentifier={authState.username || authState.email}
       />
     </main>
   )

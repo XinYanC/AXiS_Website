@@ -54,6 +54,17 @@ describe('apiRequest', () => {
     mockFetch.mockRejectedValue(new Error('Failed to fetch'))
     await expect(apiRequest('/test')).rejects.toThrow('Network error')
   })
+
+  it('does not force JSON content-type for FormData upload bodies', async () => {
+    const formData = new FormData()
+    formData.append('image', new Blob(['abc'], { type: 'image/png' }), 'square.png')
+
+    mockFetch.mockResolvedValue(makeResponse({ body: { ok: true } }))
+    await apiRequest('/upload-image', { method: 'POST', body: formData })
+
+    const [, requestOptions] = mockFetch.mock.calls[0]
+    expect(requestOptions.headers['Content-Type']).toBeUndefined()
+  })
 })
 
 describe('apiGet', () => {

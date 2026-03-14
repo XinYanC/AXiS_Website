@@ -18,7 +18,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
-/* Square image container */
+/* Image container */
 .post-image-container {
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -84,6 +84,51 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1;
     backdrop-filter: blur(2px);
+}
+
+.post-image-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #1f2937;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.post-image-nav:hover {
+    background: #ffffff;
+}
+
+.post-image-nav-left {
+    left: 8px;
+}
+
+.post-image-nav-right {
+    right: 8px;
+}
+
+.post-image-count {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.74);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 500;
+    z-index: 2;
 }
 .post-price-tag {
     display: none;

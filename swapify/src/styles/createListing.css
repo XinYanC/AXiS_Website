@@ -81,6 +81,148 @@
     cursor: pointer;
 }
 
+.create-listing-form input[type='file'] {
+    padding: 10px;
+    background: #fafafa;
+}
+
+.image-upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.image-upload-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.image-upload-hint {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #666;
+}
+
+.image-upload-status {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.transaction-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.transaction-button-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.transaction-option-button {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 8px;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.transaction-option-button:hover {
+    border-color: #b8b8b8;
+}
+
+.transaction-option-button.selected {
+    box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.16);
+    transform: translateY(-1px);
+}
+
+.transaction-option-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+}
+
+.transaction-option-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.transaction-option-button.drop-off {
+    background: #f2f6ff;
+    color: #274690;
+    border-color: #c6d7ff;
+}
+
+.transaction-option-button.pickup {
+    background: #f1faef;
+    color: #2f6a2f;
+    border-color: #cbe7c7;
+}
+
+.transaction-option-button.sell {
+    background: #fff4ec;
+    color: #8a4d1f;
+    border-color: #f3cfb4;
+}
+
+.transaction-option-button.drop-off.selected {
+    box-shadow: 0 0 0 2px rgba(39, 70, 144, 0.25);
+}
+
+.transaction-option-button.pickup.selected {
+    box-shadow: 0 0 0 2px rgba(47, 106, 47, 0.22);
+}
+
+.transaction-option-button.sell.selected {
+    box-shadow: 0 0 0 2px rgba(138, 77, 31, 0.22);
+}
+
+.uploaded-image-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.uploaded-image-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.uploaded-image-item img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.remove-uploaded-image-button {
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.remove-uploaded-image-button:hover {
+    border-color: #bbb;
+    background: #f7f7f7;
+}
+
 .submit-button {
     width: 100%;
     padding: 12px;
@@ -130,6 +272,40 @@
     font-weight: 500;
 }
 
+.create-listing-auth-required {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    padding: 8px 0 4px;
+}
+
+.create-listing-auth-required p {
+    margin: 0;
+    color: #444;
+    font-size: 1rem;
+}
+
+.create-listing-register-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #000;
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.create-listing-register-button:hover {
+    background-color: #333;
+}
+
 .floating-add-button {
     position: fixed;
     bottom: 32px;
@@ -158,4 +334,10 @@
 
 .floating-add-button:active {
     transform: scale(0.95);
+}
+
+@media (max-width: 520px) {
+    .transaction-button-grid {
+        grid-template-columns: 1fr;
+    }
 }

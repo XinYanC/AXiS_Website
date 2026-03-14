@@ -1,8 +1,76 @@
-import { apiDelete, apiGet, apiPost, apiPut } from './client'
+import { apiDelete, apiGet, apiPost, apiPut, apiRequest } from './client'
 
 export const getListingsCount = () => apiGet('/listings/count')
 
 export const createListing = (payload) => apiPost('/listings/create', payload)
+
+const getUploadedImageUrl = (response) => {
+	if (typeof response === 'string') {
+		const trimmed = response.trim()
+		if (trimmed) {
+			return trimmed
+		}
+	}
+
+	const candidate =
+		response?.url ||
+		response?.URL ||
+		response?.secure_url ||
+		response?.image ||
+		response?.image_url ||
+		response?.ImageURL ||
+		response?.['Image URL'] ||
+		response?.imageUrl ||
+		response?.link ||
+		response?.data?.url ||
+		response?.data?.secure_url ||
+		response?.result?.url ||
+		response?.result?.secure_url
+
+	if (typeof candidate === 'string' && candidate.trim()) {
+		return candidate.trim()
+	}
+
+	throw new Error('Upload succeeded but no image URL was returned by the server.')
+}
+
+export const uploadListingImage = async (file) => {
+	const isFileLike =
+		(typeof File !== 'undefined' && file instanceof File) ||
+		(file && typeof file === 'object' && typeof file.name === 'string')
+
+	if (!isFileLike) {
+		throw new Error('A valid image file is required for upload.')
+	}
+
+	const uploadWithFieldName = async (fieldName) => {
+		const formData = new FormData()
+		formData.append(fieldName, file)
+
+		return apiRequest('/listings/upload-image', {
+			method: 'POST',
+			body: formData,
+		})
+	}
+
+	try {
+		const primaryResponse = await uploadWithFieldName('image')
+		return getUploadedImageUrl(primaryResponse)
+	} catch (err) {
+		const message = err instanceof Error ? err.message : ''
+		const shouldTryFallback =
+			message.includes('API error (400)') ||
+			message.includes('API error (415)') ||
+			message.includes('API error (422)')
+
+		if (!shouldTryFallback) {
+			throw err
+		}
+
+		const fallbackResponse = await uploadWithFieldName('file')
+		return getUploadedImageUrl(fallbackResponse)
+	}
+}
 
 export const deleteListing = (id) =>
 	apiDelete('/listings/delete', {

@@ -84,6 +84,33 @@
   text-decoration: none;
 }
 
+.nav-profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.nav-profile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #d9e2ec;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.nav-profile-link:hover .nav-profile-avatar {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
 .nav-login-button {
   display: inline-flex;
   align-items: center;
@@ -186,6 +213,12 @@
     padding: 7px 12px;
   }
 
+  .nav-profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.8rem;
+  }
+
   .nav-logout-button {
     font-size: 0.85rem;
     padding: 7px 12px;
@@ -225,6 +258,10 @@
 
   .nav-login-button {
     align-self: flex-end;
+  }
+
+  .nav-profile-link {
+    align-self: center;
   }
 
   .nav-logout-button {

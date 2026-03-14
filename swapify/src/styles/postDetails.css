@@ -14,8 +14,7 @@
 
 .post-details-main-card,
 .post-seller-card,
-.post-details-content-card,
-.post-buy-card {
+.post-details-content-card {
   background: #ffffff;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
@@ -25,8 +24,7 @@
 
 .post-details-main-card:hover,
 .post-seller-card:hover,
-.post-details-content-card:hover,
-.post-buy-card:hover {
+.post-details-content-card:hover {
   border-color: #d0d0d0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
@@ -39,6 +37,9 @@
 
 .post-details-main-card {
   overflow: hidden;
+  max-width: 560px;
+  width: 100%;
+  justify-self: center;
 }
 
 .post-details-image-wrap {
@@ -52,6 +53,51 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.post-details-image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
+}
+
+.post-details-image-nav:hover {
+  background: #ffffff;
+}
+
+.post-details-image-nav-left {
+  left: 12px;
+}
+
+.post-details-image-nav-right {
+  right: 12px;
+}
+
+.post-details-image-count {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.74);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 500;
+  z-index: 2;
 }
 
 .post-details-image-fallback {
@@ -124,6 +170,13 @@
 .post-seller-card {
   padding: 16px;
   height: fit-content;
+}
+
+.post-seller-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .post-seller-card h2 {
@@ -213,23 +266,6 @@
 .seller-link:hover {
   border-color: #d0d0d0;
   background: #fafafa;
-}
-
-.post-buy-card {
-  padding: 16px;
-}
-
-.post-buy-card h2 {
-  margin: 0 0 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #1a1a1a;
-}
-
-.post-buy-note {
-  margin: 0 0 12px;
-  color: #666666;
-  font-size: 0.85rem;
 }
 
 .post-buy-button {

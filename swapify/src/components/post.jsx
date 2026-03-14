@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ProfileAvatar from './ProfileAvatar';
+import { normalizeImageList } from '../utils/images';
 import '../styles/post.css';
 
 // SVG Icons as components
@@ -71,6 +73,7 @@ const Post = ({
     id,
     title,
     description,
+    imageUrls,
     imageUrl,
     location,
     price = 0,
@@ -79,8 +82,22 @@ const Post = ({
     sellerRating = 4.8
 }) => {
     const [liked, setLiked] = useState(false);
-    const [imageError, setImageError] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [imageErrors, setImageErrors] = useState({});
     const navigate = useNavigate();
+
+    const resolvedImageUrls = useMemo(() => {
+        const normalizedFromImages = normalizeImageList(imageUrls);
+        if (normalizedFromImages.length > 0) {
+            return normalizedFromImages;
+        }
+        return normalizeImageList(imageUrl);
+    }, [imageUrls, imageUrl]);
+
+    useEffect(() => {
+        setCurrentImageIndex(0);
+        setImageErrors({});
+    }, [id, resolvedImageUrls]);
 
     const numericPrice = Number(price);
     const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0;
@@ -116,7 +133,30 @@ const Post = ({
     };
 
     const handleImageError = () => {
-        setImageError(true);
+        setImageErrors((prev) => ({ ...prev, [currentImageIndex]: true }));
+    };
+
+    const showPreviousImage = (e) => {
+        e.stopPropagation();
+        if (resolvedImageUrls.length < 2) {
+            return;
+        }
+
+        setCurrentImageIndex((prev) => {
+            if (prev === 0) {
+                return resolvedImageUrls.length - 1;
+            }
+            return prev - 1;
+        });
+    };
+
+    const showNextImage = (e) => {
+        e.stopPropagation();
+        if (resolvedImageUrls.length < 2) {
+            return;
+        }
+
+        setCurrentImageIndex((prev) => (prev + 1) % resolvedImageUrls.length);
     };
 
     const getTransactionIcon = (type) => {
@@ -138,22 +178,21 @@ const Post = ({
         }
     };
 
-    const getSellerInitials = (name) => {
-        if (!name) return '?';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    };
-
     if (!title) {
         return null;
     }
 
+    const currentImageUrl = resolvedImageUrls[currentImageIndex] || null;
+    const isCurrentImageErrored = Boolean(imageErrors[currentImageIndex]);
+    const hasMultipleImages = resolvedImageUrls.length > 1;
+
     return (
         <div onClick={handleOpenPost} className="post-container">
             <div className="post-image-container">
-                {imageUrl && !imageError ? (
+                {currentImageUrl && !isCurrentImageErrored ? (
                     <img
-                        src={imageUrl}
-                        alt={title}
+                        src={currentImageUrl}
+                        alt={`${title} - image ${currentImageIndex + 1}`}
                         onError={handleImageError}
                         className="post-image"
                     />
@@ -161,6 +200,30 @@ const Post = ({
                     <div className="image-placeholder">
                         <CameraIcon />
                     </div>
+                )}
+
+                {hasMultipleImages && (
+                    <>
+                        <button
+                            type="button"
+                            className="post-image-nav post-image-nav-left"
+                            onClick={showPreviousImage}
+                            aria-label="Previous image"
+                        >
+                            &lt;
+                        </button>
+                        <button
+                            type="button"
+                            className="post-image-nav post-image-nav-right"
+                            onClick={showNextImage}
+                            aria-label="Next image"
+                        >
+                            &gt;
+                        </button>
+                        <div className="post-image-count">
+                            {currentImageIndex + 1} / {resolvedImageUrls.length}
+                        </div>
+                    </>
                 )}
 
                 {/* Price/Type overlay on image */}
@@ -191,9 +254,7 @@ const Post = ({
 
             <div className="post-seller" onClick={handleSellerClick}>
                 <div className="seller-info">
-                    <div className="seller-avatar">
-                        {getSellerInitials(displayOwner)}
-                    </div>
+                    <ProfileAvatar value={displayOwner} className="seller-avatar" />
                     <div className="seller-details">
                         <span className="seller-name">{displayOwner}</span>
                         <span className="seller-rating">

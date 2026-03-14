@@ -1,11 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { readListingById, readUsers } from '../api'
-import FullLogo from '../assets/FullLogo.PNG'
+import Navbar from '../components/Navbar'
+import ProfileAvatar from '../components/ProfileAvatar'
+import { getListingImageUrls } from '../utils/images'
 import '../styles/postDetails.css'
 
 const normalizeUsername = (value) => String(value || '').trim().replace(/^@+/, '').toLowerCase()
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase()
+
+const getStoredViewerIdentity = () => {
+  if (typeof window === 'undefined') {
+    return {
+      username: '',
+      email: '',
+    }
+  }
+
+  return {
+    username: normalizeUsername(localStorage.getItem('swapify.username')),
+    email: normalizeEmail(localStorage.getItem('swapify.email')),
+  }
+}
 
 function PostDetails() {
   const { id } = useParams()
@@ -13,6 +29,16 @@ function PostDetails() {
   const [seller, setSeller] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imageErrors, setImageErrors] = useState({})
+
+  const listingImageUrls = useMemo(() => getListingImageUrls(listing), [listing])
+
+  useEffect(() => {
+    setCurrentImageIndex(0)
+    setImageErrors({})
+  }, [listingImageUrls])
 
   useEffect(() => {
     const loadData = async () => {
@@ -103,24 +129,54 @@ function PostDetails() {
   const sellerRating = Number.isFinite(sellerRatingValue) && sellerRatingValue > 0
     ? sellerRatingValue.toFixed(1)
     : 'N/A'
+  const viewerIdentity = getStoredViewerIdentity()
+  const sellerEmail = normalizeEmail(seller?.email || seller?.Email || seller?.user_email)
+  const listingOwnerUsername = normalizeUsername(listing?.owner)
+  const listingOwnerEmail = normalizeEmail(listing?.owner_email || listing?.ownerEmail)
+  const isOwnedByCurrentUser = Boolean(
+    (viewerIdentity.username && (
+      viewerIdentity.username === sellerUsername ||
+      viewerIdentity.username === listingOwnerUsername
+    )) ||
+    (viewerIdentity.email && (
+      viewerIdentity.email === sellerEmail ||
+      viewerIdentity.email === listingOwnerEmail
+    ))
+  )
   const isSold = String(listing?.status || '').toLowerCase() === 'sold'
 
-  const sellerInitials = sellerDisplayName
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  const currentImageUrl = listingImageUrls[currentImageIndex] || null
+  const isCurrentImageErrored = Boolean(imageErrors[currentImageIndex])
+  const hasMultipleImages = listingImageUrls.length > 1
+
+  const showPreviousImage = () => {
+    if (listingImageUrls.length < 2) {
+      return
+    }
+
+    setCurrentImageIndex((prev) => {
+      if (prev === 0) {
+        return listingImageUrls.length - 1
+      }
+      return prev - 1
+    })
+  }
+
+  const showNextImage = () => {
+    if (listingImageUrls.length < 2) {
+      return
+    }
+
+    setCurrentImageIndex((prev) => (prev + 1) % listingImageUrls.length)
+  }
+
+  const handleImageError = () => {
+    setImageErrors((prev) => ({ ...prev, [currentImageIndex]: true }))
+  }
 
   return (
     <main className="post-details-page">
-      <nav className="main-nav">
-        <div className="main-nav-left">
-          <Link to="/">
-            <img src={FullLogo} alt="Swapify" />
-          </Link>
-        </div>
-      </nav>
+      <Navbar searchQuery={searchQuery} onSearchChange={(e) => setSearchQuery(e.target.value)} />
 
       <div className="post-details-container">
         {loading ? (
@@ -131,20 +187,50 @@ function PostDetails() {
           <>
             <section className="post-details-main-card">
               <div className="post-details-image-wrap">
-                {listing?.images?.[0] ? (
-                  <img src={listing.images[0]} alt={listing?.title || 'Listing image'} className="post-details-image" />
+                {currentImageUrl && !isCurrentImageErrored ? (
+                  <img
+                    src={currentImageUrl}
+                    alt={`${listing?.title || 'Listing'} - image ${currentImageIndex + 1}`}
+                    className="post-details-image"
+                    onError={handleImageError}
+                  />
                 ) : (
                   <div className="post-details-image-fallback">No image</div>
                 )}
+
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      type="button"
+                      className="post-details-image-nav post-details-image-nav-left"
+                      onClick={showPreviousImage}
+                      aria-label="Previous image"
+                    >
+                      &lt;
+                    </button>
+                    <button
+                      type="button"
+                      className="post-details-image-nav post-details-image-nav-right"
+                      onClick={showNextImage}
+                      aria-label="Next image"
+                    >
+                      &gt;
+                    </button>
+                    <div className="post-details-image-count">
+                      {currentImageIndex + 1} / {listingImageUrls.length}
+                    </div>
+                  </>
+                )}
+
                 <div className="post-details-price-overlay">{priceLabel !== 'N/A' ? priceLabel : transactionLabel}</div>
               </div>
             </section>
 
             <div className="post-details-side-stack">
-              <aside className="post-seller-card">
+              <Link to={sellerProfilePath} className="post-seller-card post-seller-card-link">
                 <h2>Seller</h2>
                 <div className="post-details-seller-header">
-                  <div className="post-details-seller-avatar">{sellerInitials || '?'}</div>
+                  <ProfileAvatar value={sellerDisplayName} className="post-details-seller-avatar" />
                   <div className="post-details-seller-text">
                     <p className="post-details-seller-name">{sellerDisplayName}</p>
                     <p className="post-details-seller-rating">
@@ -154,13 +240,7 @@ function PostDetails() {
                   </div>
                 </div>
                 {seller?.bio && <p className="seller-bio">{seller.bio}</p>}
-
-                <div className="seller-links">
-                  <Link to={sellerProfilePath} className="seller-link primary">
-                    View Profile
-                  </Link>
-                </div>
-              </aside>
+              </Link>
 
               <section className="post-details-content-card">
                 <div className="post-details-content">
@@ -191,17 +271,15 @@ function PostDetails() {
                 </div>
               </section>
 
-              <section className="post-buy-card">
-                {isSold ? (
-                  <button type="button" className="post-buy-button" disabled>
-                    Sold
-                  </button>
-                ) : (
-                  <Link to={sellerProfilePath} className="post-buy-button">
-                    Click to Buy
-                  </Link>
-                )}
-              </section>
+              {isSold ? (
+                <button type="button" className="post-buy-button" disabled>
+                  Sold
+                </button>
+              ) : (
+                <Link to={sellerProfilePath} className="post-buy-button">
+                  {isOwnedByCurrentUser ? 'Edit post' : 'Click to Buy'}
+                </Link>
+              )}
             </div>
           </>
         )}

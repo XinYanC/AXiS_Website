@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { apiGet, apiPost, apiPut, apiDelete } from '../client'
+import { apiGet, apiPost, apiPut, apiDelete, apiRequest } from '../client'
 import {
   getListingsCount,
   createListing,
+  uploadListingImage,
   deleteListing,
   readListings,
   readListingsByUser,
@@ -27,6 +28,35 @@ describe('listings API', () => {
     apiPost.mockResolvedValue({ id: '1' })
     await createListing(payload)
     expect(apiPost).toHaveBeenCalledWith('/listings/create', payload)
+  })
+
+  it('uploadListingImage calls /listings/upload-image with FormData and returns URL', async () => {
+    const file = new File(['file-content'], 'square.png', { type: 'image/png' })
+    apiRequest.mockResolvedValue({ url: 'https://res.cloudinary.com/demo/image/upload/v1/square.png' })
+
+    const uploadedUrl = await uploadListingImage(file)
+
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    const [path, requestOptions] = apiRequest.mock.calls[0]
+    expect(path).toBe('/listings/upload-image')
+    expect(requestOptions.method).toBe('POST')
+    expect(requestOptions.body).toBeInstanceOf(FormData)
+    expect(requestOptions.body.get('image')).toBe(file)
+    expect(uploadedUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/square.png')
+  })
+
+  it('uploadListingImage falls back to file field when image field is rejected', async () => {
+    const file = new File(['file-content'], 'square.png', { type: 'image/png' })
+    apiRequest
+      .mockRejectedValueOnce(new Error('API error (422): image field required'))
+      .mockResolvedValueOnce({ secure_url: 'https://res.cloudinary.com/demo/image/upload/v1/fallback.png' })
+
+    const uploadedUrl = await uploadListingImage(file)
+
+    expect(apiRequest).toHaveBeenCalledTimes(2)
+    expect(apiRequest.mock.calls[0][1].body.get('image')).toBe(file)
+    expect(apiRequest.mock.calls[1][1].body.get('file')).toBe(file)
+    expect(uploadedUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/fallback.png')
   })
 
   it('deleteListing calls apiDelete with /listings/delete and id in body', async () => {

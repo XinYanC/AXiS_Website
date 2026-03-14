@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 import Post from '../components/post'; // Your existing Post component
+import ProfileAvatar from '../components/ProfileAvatar';
 import { readUsers } from '../api/users';
 import { readListingsByUser } from '../api/listings';
-import FullLogo from '../assets/FullLogo.PNG';
 import '../styles/profile.css';
 
 // SVG Icons
@@ -156,12 +157,6 @@ const Profile = () => {
         activeTab === 'active' ? item.status !== 'sold' : item.status === 'sold'
     );
 
-    // Get user initials for avatar
-    const getUserInitials = (name) => {
-        if (!name) return '?';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    };
-
     const handleLogout = () => {
         localStorage.removeItem('swapify.authenticated');
         localStorage.removeItem('swapify.username');
@@ -172,29 +167,12 @@ const Profile = () => {
     if (loading) {
         return (
             <>
-                <nav className="main-nav">
-                    <div className="main-nav-left">
-                        <Link to="/">
-                            <img src={FullLogo} alt="Swapify" />
-                        </Link>
-                    </div>
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            className="search-bar"
-                            placeholder="Search listings..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="main-nav-right">
-                        <h2>Saved Items</h2>
-                        <h2>Messages</h2>
-                        <h2>
-                            <button type="button" className="nav-logout-button" onClick={handleLogout}>Logout</button>
-                        </h2>
-                    </div>
-                </nav>
+                <Navbar
+                    searchQuery={searchQuery}
+                    onSearchChange={(e) => setSearchQuery(e.target.value)}
+                    showLogoutButton
+                    onLogout={handleLogout}
+                />
                 <div className="profile-loading">
                     <div className="loading-spinner"></div>
                 </div>
@@ -205,29 +183,12 @@ const Profile = () => {
     if (!user) {
         return (
             <>
-                <nav className="main-nav">
-                    <div className="main-nav-left">
-                        <Link to="/">
-                            <img src={FullLogo} alt="Swapify" />
-                        </Link>
-                    </div>
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            className="search-bar"
-                            placeholder="Search listings..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="main-nav-right">
-                        <h2>Saved Items</h2>
-                        <h2>Messages</h2>
-                        <h2>
-                            <button type="button" className="nav-logout-button" onClick={handleLogout}>Logout</button>
-                        </h2>
-                    </div>
-                </nav>
+                <Navbar
+                    searchQuery={searchQuery}
+                    onSearchChange={(e) => setSearchQuery(e.target.value)}
+                    showLogoutButton
+                    onLogout={handleLogout}
+                />
                 <div className="profile-error">
                     <h2>{error === 'User not found' ? 'User not found' : 'Unable to load profile'}</h2>
                     <p>The profile you're looking for doesn't exist or could not be loaded.</p>
@@ -238,29 +199,12 @@ const Profile = () => {
 
     return (
         <>
-            <nav className="main-nav">
-                <div className="main-nav-left">
-                    <Link to="/">
-                        <img src={FullLogo} alt="Swapify" />
-                    </Link>
-                </div>
-                <div className="search-container">
-                    <input
-                        type="text"
-                        className="search-bar"
-                        placeholder="Search listings..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-                <div className="main-nav-right">
-                    <h2>Saved Items</h2>
-                    <h2>Messages</h2>
-                    <h2>
-                        <button type="button" className="nav-logout-button" onClick={handleLogout}>Logout</button>
-                    </h2>
-                </div>
-            </nav>
+            <Navbar
+                searchQuery={searchQuery}
+                onSearchChange={(e) => setSearchQuery(e.target.value)}
+                showLogoutButton
+                onLogout={handleLogout}
+            />
 
         <div className="profile-container">
             {/* Profile Header */}
@@ -270,9 +214,7 @@ const Profile = () => {
                 </div>
                 
                 <div className="profile-info">
-                    <div className="profile-avatar-large">
-                        {getUserInitials(user.name)}
-                    </div>
+                    <ProfileAvatar value={user.name} className="profile-avatar-large" />
                     
                     <div className="profile-details">
                         <div className="profile-name-section">
