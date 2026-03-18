@@ -49,6 +49,14 @@ exports[`Home page > matches snapshot 1`] = `
       </p>
     </div>
     <button
+      aria-label="Open icon guide"
+      class="floating-help-button"
+      title="Transaction types"
+      type="button"
+    >
+      ?
+    </button>
+    <button
       aria-label="Create new listing"
       class="floating-add-button"
     >
