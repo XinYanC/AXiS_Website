@@ -7,6 +7,7 @@ import PostDetails from '../pages/PostDetails.jsx'
 import './App.css'
 import Profile from "../pages/Profile.jsx";
 import NotFound from '../pages/NotFound.jsx'
+import SavedItems from '../pages/SavedItems.jsx'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -28,6 +29,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/post/:id" element={<PostDetails />} />
         <Route path="/profile/:username" element={<Profile />} />
+        <Route path="/saved-items/:username" element={<SavedItems />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

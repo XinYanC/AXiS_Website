@@ -50,6 +50,9 @@ function Navbar({ searchQuery = '', onSearchChange, showLogoutButton = false, on
   const profilePath = profileIdentifier
     ? `/profile/${encodeURIComponent(profileIdentifier)}`
     : '/login'
+  const savedItemsPath = authState.username
+    ? `/saved-items/${encodeURIComponent(profileIdentifier)}`
+    : '/login'
 
   return (
     <nav className="main-nav">
@@ -72,7 +75,9 @@ function Navbar({ searchQuery = '', onSearchChange, showLogoutButton = false, on
       <div className="main-nav-right">
         {authState.isLoggedIn ? (
           <>
-            <h2>Saved Items</h2>
+            <Link to={savedItemsPath} className="nav-saved-items-link">
+              <h2>Saved Items</h2>
+            </Link>
             <h2>Messages</h2>
             <Link to={profilePath} className="nav-profile-link" aria-label="Profile">
               <ProfileAvatar value={profileIdentifier} className="nav-profile-avatar" />
