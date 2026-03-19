@@ -23,7 +23,18 @@ const getAuthState = () => {
   }
 }
 
-function Navbar({ searchQuery = '', onSearchChange, showLogoutButton = false, onLogout }) {
+import FilterDropdown from './FilterDropdown'
+import './FilterDropdown.css'
+import { FiSliders } from 'react-icons/fi'
+
+function Navbar({
+  searchQuery = '',
+  onSearchChange,
+  showLogoutButton = false,
+  onLogout,
+  filters = {},
+  onFilterChange,
+}) {
   const [authState, setAuthState] = useState(getAuthState)
 
   useEffect(() => {
@@ -54,6 +65,10 @@ function Navbar({ searchQuery = '', onSearchChange, showLogoutButton = false, on
     ? `/saved-items/${encodeURIComponent(profileIdentifier)}`
     : '/login'
 
+
+
+  const [showFilter, setShowFilter] = useState(false)
+
   return (
     <nav className="main-nav">
       <div className="main-nav-left">
@@ -62,7 +77,7 @@ function Navbar({ searchQuery = '', onSearchChange, showLogoutButton = false, on
         </Link>
       </div>
 
-      <div className="search-container">
+      <div className="search-container" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
           type="text"
           className="search-bar"
@@ -70,6 +85,33 @@ function Navbar({ searchQuery = '', onSearchChange, showLogoutButton = false, on
           value={searchQuery}
           onChange={handleSearchChange}
         />
+        <button
+          type="button"
+          className="filter-btn"
+          aria-label="Filter listings"
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            padding: 8,
+            fontSize: 22,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: 0
+          }}
+          onClick={() => setShowFilter((v) => !v)}
+        >
+          <FiSliders />
+        </button>
+        {showFilter && (
+          <FilterDropdown
+            filters={filters}
+            onChange={onFilterChange}
+            onClose={() => setShowFilter(false)}
+          />
+        )}
       </div>
 
       <div className="main-nav-right">

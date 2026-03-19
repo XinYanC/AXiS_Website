@@ -26,6 +26,7 @@ function Home() {
   const [listings, setListings] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [authState, setAuthState] = useState(getAuthState)
+  const [filters, setFilters] = useState({ location: '', price: '', transactionType: '' })
 
   const fetchListings = async () => {
     try {
@@ -78,6 +79,26 @@ function Home() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
+  // Filter listings client-side
+  const filteredListings = listings.filter((listing) => {
+    // Location filter (city, state, or country)
+    const location = String(listing.meetup_location || '').toLowerCase()
+    const filterLocation = String(filters.location || '').toLowerCase()
+    const matchesLocation = !filterLocation || location.includes(filterLocation)
+
+    // Price filter (max price)
+    const price = Number(listing.price)
+    const filterPrice = Number(filters.price)
+    const matchesPrice = !filterPrice || price <= filterPrice
+
+    // Transaction type filter
+    const transactionType = String(listing.transaction_type || '').toLowerCase()
+    const filterType = String(filters.transactionType || '').toLowerCase()
+    const matchesType = !filterType || transactionType === filterType
+
+    return matchesLocation && matchesPrice && matchesType
+  })
+
   useEffect(() => {
     const syncAuthState = () => {
       setAuthState(getAuthState())
@@ -94,11 +115,16 @@ function Home() {
 
   return (
     <main>
-      <Navbar searchQuery={searchQuery} onSearchChange={(e) => setSearchQuery(e.target.value)} />
+      <Navbar
+        searchQuery={searchQuery}
+        onSearchChange={(e) => setSearchQuery(e.target.value)}
+        filters={filters}
+        onFilterChange={setFilters}
+      />
 
       <div className="posts-grid">
-        {listings.length > 0 ? (
-          listings.map((listing) => (
+        {filteredListings.length > 0 ? (
+          filteredListings.map((listing) => (
             <Post
               key={listing._id}
               id={listing._id}
