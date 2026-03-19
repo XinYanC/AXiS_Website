@@ -4,6 +4,7 @@ import Home from '../pages/Home.jsx'
 import Login from '../pages/Login.jsx'
 import Register from '../pages/Register.jsx'
 import PostDetails from '../pages/PostDetails.jsx'
+import Messages from '../pages/Messages.jsx'
 import './App.css'
 import Profile from "../pages/Profile.jsx";
 import NotFound from '../pages/NotFound.jsx'
@@ -28,6 +29,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/post/:id" element={<PostDetails />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/profile/:username" element={<Profile />} />
         <Route path="/saved-items/:username" element={<SavedItems />} />
         <Route path="*" element={<NotFound />} />

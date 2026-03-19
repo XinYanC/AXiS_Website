@@ -4,6 +4,7 @@ import { readListingById, readUsers } from '../api'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { getListingImageUrls } from '../utils/images'
+import { FiMapPin } from 'react-icons/fi'
 import '../styles/postDetails.css'
 
 const normalizeUsername = (value) => String(value || '').trim().replace(/^@+/, '').toLowerCase()
@@ -101,6 +102,17 @@ function PostDetails() {
       .join(' ')
   }, [listing?.transaction_type])
 
+  // Button text based on transaction type
+  const getBuyButtonText = () => {
+    if (isOwnedByCurrentUser) return 'Edit post'
+    if (isSold) return 'Sold'
+    if (transactionLabel.toLowerCase().includes('sell')) return 'Buy'
+    if (transactionLabel.toLowerCase().includes('trade')) return 'Trade'
+    if (transactionLabel.toLowerCase().includes('free')) return 'Claim'
+    if (transactionLabel.toLowerCase().includes('rent')) return 'Rent'
+    return 'Continue'
+  }
+
   const priceLabel = useMemo(() => {
     const numericPrice = Number(listing?.price)
     if (Number.isFinite(numericPrice) && numericPrice > 0) {
@@ -116,14 +128,17 @@ function PostDetails() {
     normalizeUsername(seller?.username || seller?.Username || seller?.user_name) ||
     normalizeUsername(listing?.owner)
 
-  const sellerProfilePath = sellerUsername ? `/profile/${encodeURIComponent(sellerUsername)}` : '/login'
-
   const sellerDisplayName =
     seller?.name ||
     seller?.username ||
     seller?.Username ||
     listing?.owner ||
     'Unknown seller'
+
+  const sellerProfilePath = sellerUsername ? `/profile/${encodeURIComponent(sellerUsername)}` : '/login'
+  const messageSellerPath = sellerUsername
+    ? `/messages?seller=${encodeURIComponent(sellerDisplayName)}&listingId=${encodeURIComponent(id || '')}&listingTitle=${encodeURIComponent(listing?.title || '')}`
+    : '/login'
 
   const sellerRatingValue = Number(seller?.rating ?? seller?.sellerRating)
   const sellerRating = Number.isFinite(sellerRatingValue) && sellerRatingValue > 0
@@ -185,8 +200,12 @@ function PostDetails() {
           <div className="post-details-state error">{error}</div>
         ) : (
           <>
+
             <section className="post-details-main-card">
               <div className="post-details-image-wrap">
+                {isSold && (
+                  <div className="post-details-sold-overlay">SOLD</div>
+                )}
                 {currentImageUrl && !isCurrentImageErrored ? (
                   <img
                     src={currentImageUrl}
@@ -221,33 +240,34 @@ function PostDetails() {
                     </div>
                   </>
                 )}
-
-                <div className="post-details-price-overlay">{priceLabel !== 'N/A' ? priceLabel : transactionLabel}</div>
               </div>
             </section>
 
+
             <div className="post-details-side-stack">
               <Link to={sellerProfilePath} className="post-seller-card post-seller-card-link">
-                <h2>Seller</h2>
                 <div className="post-details-seller-header">
-                  <ProfileAvatar value={sellerDisplayName} className="post-details-seller-avatar" />
+                  <ProfileAvatar value={sellerDisplayName} className="post-details-seller-avatar post-details-seller-avatar-large" />
                   <div className="post-details-seller-text">
-                    <p className="post-details-seller-name">{sellerDisplayName}</p>
-                    <p className="post-details-seller-rating">
+                    <span className="post-details-seller-label">Seller</span>
+                    <span className="post-details-seller-name">{sellerDisplayName}</span>
+                    <span className="post-details-seller-rating">
                       <span className="star-icon">★</span>
                       {sellerRating}
-                    </p>
+                    </span>
                   </div>
                 </div>
-                {seller?.bio && <p className="seller-bio">{seller.bio}</p>}
               </Link>
 
               <section className="post-details-content-card">
                 <div className="post-details-content">
-                  <h1>{listing?.title || 'Untitled listing'}</h1>
-                  <p className="post-details-location">{listing?.meetup_location || listing?.location || 'Location not specified'}</p>
+                  <h1 className="post-details-title">{listing?.title || 'Untitled listing'}</h1>
                   <p className="post-details-description">
                     {listing?.description || 'No description provided for this post.'}
+                  </p>
+                  <p className="post-details-location">
+                    <FiMapPin style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                    {listing?.meetup_location || listing?.location || 'Location not specified'}
                   </p>
 
                   <div className="post-details-meta-grid">
@@ -255,31 +275,25 @@ function PostDetails() {
                       <span className="label">Price</span>
                       <span>{priceLabel}</span>
                     </div>
-                    <div>
-                      <span className="label">Type</span>
-                      <span>{transactionLabel}</span>
-                    </div>
-                    <div>
-                      <span className="label">Location</span>
-                      <span>{listing?.meetup_location || listing?.location || 'Not specified'}</span>
-                    </div>
-                    <div>
-                      <span className="label">Status</span>
-                      <span>{listing?.status || 'active'}</span>
-                    </div>
                   </div>
                 </div>
               </section>
 
-              {isSold ? (
-                <button type="button" className="post-buy-button" disabled>
-                  Sold
-                </button>
-              ) : (
-                <Link to={sellerProfilePath} className="post-buy-button">
-                  {isOwnedByCurrentUser ? 'Edit post' : 'Click to Buy'}
+              <div className="post-details-action-buttons">
+                <Link
+                  to={isOwnedByCurrentUser || isSold ? '#' : sellerProfilePath}
+                  className="post-buy-button"
+                  disabled={isSold}
+                  style={isSold ? { pointerEvents: 'none', opacity: 0.7 } : {}}
+                >
+                  {getBuyButtonText()}
                 </Link>
-              )}
+                {!isOwnedByCurrentUser ? (
+                  <Link to={messageSellerPath} className="post-message-button">
+                    Message Seller
+                  </Link>
+                ) : null}
+              </div>
             </div>
           </>
         )}

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import FullLogo from '../assets/FullLogo.PNG'
 import ProfileAvatar from './ProfileAvatar'
+import FilterDropdown from './FilterDropdown'
+import './FilterDropdown.css'
+import { FiSliders } from 'react-icons/fi'
 
 const getAuthState = () => {
   if (typeof window === 'undefined') {
@@ -22,10 +25,6 @@ const getAuthState = () => {
     email,
   }
 }
-
-import FilterDropdown from './FilterDropdown'
-import './FilterDropdown.css'
-import { FiSliders } from 'react-icons/fi'
 
 function Navbar({
   searchQuery = '',
@@ -64,6 +63,7 @@ function Navbar({
   const savedItemsPath = authState.username
     ? `/saved-items/${encodeURIComponent(profileIdentifier)}`
     : '/login'
+  const messagesPath = authState.isLoggedIn ? '/messages' : '/login'
 
 
 
@@ -120,7 +120,9 @@ function Navbar({
             <Link to={savedItemsPath} className="nav-saved-items-link">
               <h2>Saved Items</h2>
             </Link>
-            <h2>Messages</h2>
+            <Link to={messagesPath} className="nav-messages-link">
+              <h2>Messages</h2>
+            </Link>
             <Link to={profilePath} className="nav-profile-link" aria-label="Profile">
               <ProfileAvatar value={profileIdentifier} className="nav-profile-avatar" />
             </Link>

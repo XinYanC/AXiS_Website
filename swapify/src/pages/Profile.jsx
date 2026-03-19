@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Post from '../components/post'; // Your existing Post component
 import ProfileAvatar from '../components/ProfileAvatar';
@@ -48,6 +48,9 @@ const Profile = () => {
             .toLowerCase();
 
     const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
+    const viewerUsername = normalizeUsername(localStorage.getItem('swapify.username'));
+    const viewerEmail = normalizeEmail(localStorage.getItem('swapify.email'));
 
     const getCandidateUsername = (candidate) =>
         normalizeUsername(candidate?.username || candidate?.Username || candidate?.user_name || '');
@@ -197,6 +200,13 @@ const Profile = () => {
         );
     }
 
+    const isOwnProfile = Boolean(
+        (viewerUsername && viewerUsername === normalizeUsername(user.username)) ||
+        (viewerEmail && viewerEmail === normalizeEmail(user.email || user.Email || user.user_email))
+    );
+
+    const profileMessagePath = `/messages?seller=${encodeURIComponent(user.name || user.username)}&profile=${encodeURIComponent(user.username || '')}`;
+
     return (
         <>
             <Navbar
@@ -246,6 +256,12 @@ const Profile = () => {
                             <span className="rating-number">{user.rating}</span>
                             <span className="rating-total">({user.totalReviews} reviews)</span>
                         </div>
+
+                        {!isOwnProfile && (
+                            <Link to={profileMessagePath} className="profile-message-button">
+                                Message Seller
+                            </Link>
+                        )}
                         
                         <div className="profile-stats">
                             <div className="stat-item">
