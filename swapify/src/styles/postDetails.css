@@ -245,6 +245,34 @@
   color: #888888;
 }
 
+.post-details-like-button {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.post-details-like-button.liked {
+  color: #ff4b4b;
+}
+
+.post-details-like-button.syncing {
+  opacity: 0.72;
+}
+
+.post-details-like-button.syncing svg {
+  animation: post-details-heart-sync-pulse 0.95s ease-in-out infinite;
+}
+
+@keyframes post-details-heart-sync-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .post-seller-card {
   padding: 16px;
   height: fit-content;

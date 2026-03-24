@@ -73,10 +73,7 @@ export const uploadListingImage = async (file) => {
 }
 
 export const deleteListing = (id) =>
-	apiDelete('/listings/delete', {
-		body: JSON.stringify({ id }),
-		headers: { 'Content-Type': 'application/json' },
-	})
+	apiDelete(`/listings/delete?id=${encodeURIComponent(id)}`)
 
 export const readListings = () => apiGet('/listings/read')
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { readListingById, readUsers, updateListing, updateUser } from '../api'
 import Navbar from '../components/Navbar'
@@ -9,19 +9,10 @@ import '../styles/postDetails.css'
 
 // Global queue to serialize like/unlike operations and prevent race conditions
 let likeQueue = Promise.resolve();
-let isProcessingLike = false;
 
 const queueLikeOperation = async (operation) => {
-    while (isProcessingLike) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-    }
-    isProcessingLike = true;
-    try {
-        likeQueue = likeQueue.then(() => operation());
-        return await likeQueue;
-    } finally {
-        isProcessingLike = false;
-    }
+  likeQueue = likeQueue.then(() => operation());
+  return likeQueue;
 };
 
 const normalizeUsername = (value) => String(value || '').trim().replace(/^@+/, '').toLowerCase()
@@ -171,6 +162,8 @@ function PostDetails() {
   const [imageErrors, setImageErrors] = useState({})
   const [liked, setLiked] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const pendingLikedRef = useRef(null)
+  const isSyncingRef = useRef(false)
 
   const listingImageUrls = useMemo(() => getListingImageUrls(listing), [listing])
 
@@ -272,13 +265,62 @@ function PostDetails() {
     }
   }, [loadData])
 
-  const handleLike = useCallback(async (e) => {
-    if (e) {
-      e.stopPropagation()
+  const processPendingLikeSync = useCallback(async () => {
+    if (isSyncingRef.current || !id) {
+      return
     }
 
-    if (isUpdating) {
-      return
+    isSyncingRef.current = true
+    setIsUpdating(true)
+
+    try {
+      while (pendingLikedRef.current !== null) {
+        const targetLiked = pendingLikedRef.current
+        pendingLikedRef.current = null
+        const listingId = String(id)
+
+        try {
+          await queueLikeOperation(async () => {
+            await syncLikeAndSaveToBackend({ listingId, nextLiked: targetLiked })
+          })
+        } catch (backendErr) {
+          console.error('Failed to sync save/like with backend:', backendErr)
+          if (pendingLikedRef.current === null) {
+            setLiked(!targetLiked)
+          }
+        }
+      }
+    } finally {
+      isSyncingRef.current = false
+      setIsUpdating(false)
+    }
+  }, [id])
+
+  useEffect(() => {
+    const flushPendingLikeSync = () => {
+      if (pendingLikedRef.current !== null) {
+        void processPendingLikeSync()
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushPendingLikeSync()
+      }
+    }
+
+    window.addEventListener('pagehide', flushPendingLikeSync)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('pagehide', flushPendingLikeSync)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [processPendingLikeSync])
+
+  const handleLike = useCallback((e) => {
+    if (e) {
+      e.stopPropagation()
     }
 
     const viewer = getViewerIdentity()
@@ -287,53 +329,12 @@ function PostDetails() {
       return
     }
 
-    const listingId = String(id)
     const nextLiked = !liked
-    
-    setIsUpdating(true)
-    setLiked(nextLiked)
 
-    try {
-      // Queue this operation to ensure it runs after all previous likes are done
-      await queueLikeOperation(async () => {
-        await syncLikeAndSaveToBackend({ listingId, nextLiked })
-        
-        // After syncing, refetch the liked state from backend to ensure accuracy
-        console.log(`After sync for post ${id}, refetching liked state...`);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const viewer = getViewerIdentity();
-        const usersResponse = await readUsers();
-        const usersArray = usersResponse && (usersResponse.Users || usersResponse.User)
-          ? Object.values(usersResponse.Users || usersResponse.User)
-          : Array.isArray(usersResponse)
-            ? usersResponse
-            : [];
-        
-        const matchedUser = usersArray.find((candidate) => {
-          const candidateUsername = normalizeUsername(candidate?.username || candidate?.Username || candidate?.user_name);
-          const candidateEmail = normalizeEmail(candidate?.email || candidate?.Email || candidate?.user_email);
-          return (
-            (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-            (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-          );
-        });
-        
-        if (matchedUser) {
-          const savedIds = resolveSavedPostIds(matchedUser);
-          const normalizedId = String(id).trim();
-          const actuallyLiked = savedIds.includes(normalizedId);
-          console.log(`Refetched for post ${id}: actuallyLiked=${actuallyLiked}, savedIds=[${savedIds.join(', ')}]`);
-          setLiked(actuallyLiked);
-        }
-      });
-    } catch (backendErr) {
-      console.error('Failed to sync save/like with backend:', backendErr)
-      setLiked(!nextLiked)
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [id, liked, isUpdating])
+    setLiked(nextLiked)
+    pendingLikedRef.current = nextLiked
+    void processPendingLikeSync()
+  }, [liked, processPendingLikeSync])
 
   const transactionLabel = useMemo(() => {
     if (!listing?.transaction_type) return 'Not specified'
@@ -561,8 +562,9 @@ function PostDetails() {
                       <button
                         type="button"
                         onClick={handleLike}
-                        className={`post-details-like-button ${liked ? 'liked' : ''}`}
+                        className={`post-details-like-button ${liked ? 'liked' : ''} ${isUpdating ? 'syncing' : ''}`}
                         aria-label={liked ? 'Unlike post' : 'Like post'}
+                        aria-busy={isUpdating}
                         style={{
                           background: 'none',
                           border: 'none',

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileAvatar from './ProfileAvatar';
 import { normalizeImageList } from '../utils/images';
@@ -7,19 +7,10 @@ import '../styles/post.css';
 
 // Global queue to serialize like/unlike operations and prevent race conditions
 let likeQueue = Promise.resolve();
-let isProcessingLike = false;
 
 const queueLikeOperation = async (operation) => {
-    while (isProcessingLike) {
-        await new Promise(resolve => setTimeout(resolve, 10));
-    }
-    isProcessingLike = true;
-    try {
-        likeQueue = likeQueue.then(() => operation());
-        return await likeQueue;
-    } finally {
-        isProcessingLike = false;
-    }
+    likeQueue = likeQueue.then(() => operation());
+    return likeQueue;
 };
 
 // SVG Icons as components (exported for use in icon legend/help)
@@ -285,6 +276,8 @@ const Post = ({
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imageErrors, setImageErrors] = useState({});
     const [isUpdating, setIsUpdating] = useState(false);
+    const pendingLikedRef = useRef(null);
+    const isSyncingRef = useRef(false);
     const navigate = useNavigate();
 
     const resolvedImageUrls = useMemo(() => {
@@ -373,10 +366,64 @@ const Post = ({
 
     const displayOwner = owner || 'Unknown User';
 
-    const handleLike = async (e) => {
+    const processPendingLikeSync = useCallback(async () => {
+        if (isSyncingRef.current || !id) {
+            return;
+        }
+
+        isSyncingRef.current = true;
+        setIsUpdating(true);
+
+        try {
+            while (pendingLikedRef.current !== null) {
+                const targetLiked = pendingLikedRef.current;
+                pendingLikedRef.current = null;
+
+                const listingId = String(id);
+
+                try {
+                    await queueLikeOperation(async () => {
+                        await syncLikeAndSaveToBackend({ listingId, nextLiked: targetLiked });
+                    });
+                } catch (backendErr) {
+                    console.error('Failed to sync save/like with backend:', backendErr);
+                    if (pendingLikedRef.current === null) {
+                        setLiked(!targetLiked);
+                    }
+                }
+            }
+        } finally {
+            isSyncingRef.current = false;
+            setIsUpdating(false);
+        }
+    }, [id]);
+
+    useEffect(() => {
+        const flushPendingLikeSync = () => {
+            if (pendingLikedRef.current !== null) {
+                void processPendingLikeSync();
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                flushPendingLikeSync();
+            }
+        };
+
+        window.addEventListener('pagehide', flushPendingLikeSync);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('pagehide', flushPendingLikeSync);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [processPendingLikeSync]);
+
+    const handleLike = (e) => {
         e.stopPropagation();
 
-        if (!id || isUpdating) {
+        if (!id) {
             return;
         }
 
@@ -386,50 +433,11 @@ const Post = ({
             return;
         }
 
-        const listingId = String(id);
         const nextLiked = !liked;
-        
-        setIsUpdating(true);
-        setLiked(nextLiked);
 
-        try {
-            // Queue this operation to ensure it runs after all previous likes are done
-            await queueLikeOperation(async () => {
-                await syncLikeAndSaveToBackend({ listingId, nextLiked });
-                
-                // After syncing, refetch the liked state from backend to ensure accuracy
-                console.log(`After sync for post ${id}, refetching liked state...`);
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                const viewer = getViewerIdentity();
-                const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail;
-                if (viewerKey) {
-                    const usersResponse = await readUsers();
-                    const users = toUsersArray(usersResponse);
-                    const matchedUser = users.find((candidate) => {
-                        const candidateUsername = normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name);
-                        const candidateEmail = normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email);
-                        return (
-                            (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-                            (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-                        );
-                    });
-                    
-                    if (matchedUser) {
-                        const savedIds = resolveSavedPostIds(matchedUser);
-                        const normalizedId = String(id).trim();
-                        const actuallyLiked = savedIds.includes(normalizedId);
-                        console.log(`Refetched for post ${id}: actuallyLiked=${actuallyLiked}, savedIds=[${savedIds.join(', ')}]`);
-                        setLiked(actuallyLiked);
-                    }
-                }
-            });
-        } catch (backendErr) {
-            console.error('Failed to sync save/like with backend:', backendErr);
-            setLiked(!nextLiked);
-        } finally {
-            setIsUpdating(false);
-        }
+        setLiked(nextLiked);
+        pendingLikedRef.current = nextLiked;
+        void processPendingLikeSync();
     };
 
     const handleOpenPost = () => {
@@ -558,8 +566,9 @@ const Post = ({
                 )}
                 <button
                     onClick={handleLike}
-                    className={`like-button ${liked ? 'liked' : ''}`}
+                    className={`like-button ${liked ? 'liked' : ''} ${isUpdating ? 'syncing' : ''}`}
                     aria-label="Like post"
+                    aria-busy={isUpdating}
                 >
                     <HeartIcon />
                 </button>
