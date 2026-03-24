@@ -4,7 +4,7 @@ import { readListingById, readUsers } from '../api'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { getListingImageUrls } from '../utils/images'
-import { FiMapPin } from 'react-icons/fi'
+import { FiHeart, FiMapPin } from 'react-icons/fi'
 import '../styles/postDetails.css'
 
 const normalizeUsername = (value) => String(value || '').trim().replace(/^@+/, '').toLowerCase()
@@ -123,6 +123,45 @@ function PostDetails() {
     }
     return 'N/A'
   }, [listing?.price])
+
+  const likesCount = useMemo(() => {
+    const numericLikes = Number(
+      listing?.likes_count ??
+      listing?.likesCount ??
+      listing?.num_likes ??
+      listing?.numLikes
+    )
+
+    if (Number.isFinite(numericLikes) && numericLikes >= 0) {
+      return numericLikes
+    }
+
+    const likesCollection =
+      listing?.likes ??
+      listing?.liked_by ??
+      listing?.likedBy ??
+      listing?.favorites ??
+      listing?.saved_by
+
+    if (Array.isArray(likesCollection)) {
+      return likesCollection.length
+    }
+
+    if (likesCollection && typeof likesCollection === 'object') {
+      return Object.keys(likesCollection).length
+    }
+
+    return 0
+  }, [listing])
+
+  const locationLabel = listing?.meetup_location || listing?.location || 'Location not specified'
+  const hasLocation = Boolean(String(locationLabel || '').trim() && locationLabel !== 'Location not specified')
+  const mapEmbedUrl = hasLocation
+    ? `https://www.google.com/maps?q=${encodeURIComponent(String(locationLabel))}&output=embed`
+    : ''
+  const mapsExternalUrl = hasLocation
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(String(locationLabel))}`
+    : ''
 
   const sellerUsername =
     normalizeUsername(seller?.username || seller?.Username || seller?.user_name) ||
@@ -267,13 +306,20 @@ function PostDetails() {
                   </p>
                   <p className="post-details-location">
                     <FiMapPin style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                    {listing?.meetup_location || listing?.location || 'Location not specified'}
+                    {locationLabel}
                   </p>
 
                   <div className="post-details-meta-grid">
                     <div>
                       <span className="label">Price</span>
                       <span>{priceLabel}</span>
+                    </div>
+                    <div>
+                      <span className="label">Likes</span>
+                      <span className="post-details-likes-inline" aria-label={`${likesCount} likes`}>
+                        <FiHeart />
+                        {likesCount}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -295,6 +341,36 @@ function PostDetails() {
                 ) : null}
               </div>
             </div>
+
+            <section className="post-details-map-card">
+              <div className="post-details-map-header">
+                <h2>Approximate Location</h2>
+                {hasLocation ? (
+                  <a
+                    href={mapsExternalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="post-details-map-link"
+                  >
+                    Open in Maps
+                  </a>
+                ) : null}
+              </div>
+
+              {hasLocation ? (
+                <div className="post-details-map-frame-wrap">
+                  <iframe
+                    title={`Map for ${locationLabel}`}
+                    src={mapEmbedUrl}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="post-details-map-frame"
+                  />
+                </div>
+              ) : (
+                <p className="post-details-map-empty">Location not specified for this item.</p>
+              )}
+            </section>
           </>
         )}
       </div>

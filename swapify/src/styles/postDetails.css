@@ -8,13 +8,14 @@
   padding: 16px;
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 20px;
+  gap: 12px;
   align-items: start;
 }
 
 .post-details-main-card,
 .post-seller-card,
-.post-details-content-card {
+.post-details-content-card,
+.post-details-map-card {
   background: #ffffff;
   border: 1px solid #f0f0f0;
   border-radius: 8px;
@@ -24,7 +25,8 @@
 
 .post-details-main-card:hover,
 .post-seller-card:hover,
-.post-details-content-card:hover {
+.post-details-content-card:hover,
+.post-details-map-card:hover {
   border-color: #d0d0d0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
@@ -35,11 +37,65 @@
   gap: 16px;
 }
 
+.post-details-map-card {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+  padding: 14px;
+}
+
+.post-details-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.post-details-map-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.post-details-map-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.post-details-map-link:hover {
+  text-decoration: underline;
+}
+
+.post-details-map-frame-wrap {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.post-details-map-frame {
+  width: 100%;
+  height: 320px;
+  border: 0;
+  display: block;
+}
+
+.post-details-map-empty {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
 .post-details-main-card {
   overflow: hidden;
-  max-width: 560px;
+  max-width: none;
   width: 100%;
-  justify-self: center;
+  justify-self: stretch;
 }
 
 .post-details-image-wrap {
@@ -155,6 +211,15 @@
   margin: 0 0 14px;
   color: #444444;
   font-size: 0.92rem;
+}
+
+.post-details-likes-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #ef4444;
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .post-details-meta-grid {
@@ -399,6 +464,11 @@
 
   .post-details-side-stack {
     gap: 12px;
+  }
+
+  .post-details-map-card {
+    max-width: none;
+    justify-self: stretch;
   }
 }
 
