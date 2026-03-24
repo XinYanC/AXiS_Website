@@ -21,6 +21,44 @@ function ScrollToTop() {
 }
 
 function App() {
+  useEffect(() => {
+    const cleanupMarkerKey = 'swapify.storage-cleanup.saved-likes.v1'
+    const alreadyCleaned = localStorage.getItem(cleanupMarkerKey) === 'true'
+
+    if (alreadyCleaned) {
+      return
+    }
+
+    const keysToRemove = []
+
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index)
+      if (!key) {
+        continue
+      }
+
+      if (
+        key.startsWith('swapify.saved-listings.') ||
+        key === 'swapify.saved-posts' ||
+        key === 'swapify.savedPosts' ||
+        key === 'swapify.likes' ||
+        key === 'swapify.liked-posts'
+      ) {
+        keysToRemove.push(key)
+      }
+    }
+
+    keysToRemove.forEach((key) => {
+      localStorage.removeItem(key)
+    })
+
+    localStorage.setItem(cleanupMarkerKey, 'true')
+
+    if (keysToRemove.length > 0) {
+      window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'))
+    }
+  }, [])
+
   return (
     <>
       <ScrollToTop />

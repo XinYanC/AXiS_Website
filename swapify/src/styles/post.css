@@ -161,12 +161,13 @@
 .like-button {
     border: none;
     background: none;
-    padding: 0;
+    padding: 4px;
     cursor: pointer;
-    color: #cccccc;
+    color: #999999;
     transition: color 0.2s ease;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .like-button svg {

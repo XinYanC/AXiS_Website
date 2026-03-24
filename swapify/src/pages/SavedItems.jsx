@@ -2,29 +2,42 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Post from '../components/post'
-import { readListings } from '../api'
+import { readListings, readUsers } from '../api'
 import { getListingImageUrls } from '../utils/images'
 import '../styles/savedItems.css';
 
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
 
-const getSavedStorageKey = (viewerIdentifier) =>
-  `swapify.saved-listings.${normalizeIdentifier(viewerIdentifier)}`;
-
-const getSavedListingIds = (viewerIdentifier) => {
-  if (!viewerIdentifier) {
-    return [];
+const toUsersArray = (usersResponse) => {
+  if (usersResponse && (usersResponse.Users || usersResponse.User)) {
+    return Object.values(usersResponse.Users || usersResponse.User);
   }
 
-  try {
-    const raw = localStorage.getItem(getSavedStorageKey(viewerIdentifier));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.map((item) => String(item || '').trim()).filter(Boolean)
-      : [];
-  } catch {
-    return [];
+  return Array.isArray(usersResponse) ? usersResponse : [];
+};
+
+const resolveSavedPostIds = (user) => {
+  const savedField =
+    user?.saved_listings ||
+    user?.savedListings ||
+    user?.saved_posts ||
+    user?.savedPosts ||
+    user?.saved_items ||
+    user?.savedItems ||
+    user?.favorites ||
+    [];
+
+  if (Array.isArray(savedField)) {
+    return savedField.map((item) => String(item || '').trim()).filter(Boolean);
   }
+
+  if (savedField && typeof savedField === 'object') {
+    return Object.values(savedField)
+      .map((item) => String(item || '').trim())
+      .filter(Boolean);
+  }
+
+  return [];
 };
 
 const SavedItems = () => {
@@ -73,11 +86,24 @@ const SavedItems = () => {
       setError('');
 
       try {
-        const savedListingIds = getSavedListingIds(viewerIdentifier);
-        if (savedListingIds.length === 0) {
+        const usersResponse = await readUsers();
+        const users = toUsersArray(usersResponse);
+
+        const matchedUser = users.find((candidate) => {
+          const candidateUsername = normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name);
+          const candidateEmail = normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email);
+
+          return candidateUsername === viewerIdentifier || candidateEmail === viewerIdentifier;
+        });
+
+        const backendSavedIds = matchedUser ? resolveSavedPostIds(matchedUser) : [];
+
+        if (!matchedUser || backendSavedIds.length === 0) {
           setSavedListings([]);
           return;
         }
+
+        const savedListingIds = backendSavedIds;
 
         const listingsResponse = await readListings();
         const listingsArray = listingsResponse && listingsResponse.Listings
@@ -99,20 +125,18 @@ const SavedItems = () => {
       }
     };
 
+    // Load on mount
     loadSavedListings();
 
-    const refreshSavedListings = () => {
+    // Reload when user returns to the page (e.g., from PostDetails)
+    const handlePageFocus = () => {
       loadSavedListings();
     };
 
-    window.addEventListener('swapify:saved-items-updated', refreshSavedListings);
-    window.addEventListener('focus', refreshSavedListings);
-    window.addEventListener('storage', refreshSavedListings);
+    window.addEventListener('focus', handlePageFocus);
 
     return () => {
-      window.removeEventListener('swapify:saved-items-updated', refreshSavedListings);
-      window.removeEventListener('focus', refreshSavedListings);
-      window.removeEventListener('storage', refreshSavedListings);
+      window.removeEventListener('focus', handlePageFocus);
     };
   }, [viewerIdentifier, navigate]);
 
