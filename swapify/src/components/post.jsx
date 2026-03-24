@@ -86,6 +86,42 @@ const CameraIcon = () => (
     </svg>
 );
 
+const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
+
+const getStoredViewerIdentifier = () => {
+    const username = normalizeIdentifier(localStorage.getItem('swapify.username'));
+    const email = normalizeIdentifier(localStorage.getItem('swapify.email'));
+    return username || email || '';
+};
+
+const getSavedStorageKey = (viewerIdentifier) =>
+    `swapify.saved-listings.${normalizeIdentifier(viewerIdentifier)}`;
+
+const getSavedListingIds = (viewerIdentifier) => {
+    if (!viewerIdentifier) {
+        return [];
+    }
+
+    try {
+        const raw = localStorage.getItem(getSavedStorageKey(viewerIdentifier));
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed)
+            ? parsed.map((item) => String(item || '').trim()).filter(Boolean)
+            : [];
+    } catch {
+        return [];
+    }
+};
+
+const setSavedListingIds = (viewerIdentifier, listingIds) => {
+    if (!viewerIdentifier) {
+        return;
+    }
+
+    localStorage.setItem(getSavedStorageKey(viewerIdentifier), JSON.stringify(listingIds));
+    window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'));
+};
+
 const Post = ({
     id,
     title,
@@ -111,10 +147,22 @@ const Post = ({
         return normalizeImageList(imageUrl);
     }, [imageUrls, imageUrl]);
 
+    const viewerIdentifier = useMemo(() => getStoredViewerIdentifier(), []);
+
     useEffect(() => {
         setCurrentImageIndex(0);
         setImageErrors({});
     }, [id, resolvedImageUrls]);
+
+    useEffect(() => {
+        if (!id) {
+            setLiked(false);
+            return;
+        }
+
+        const savedIds = getSavedListingIds(viewerIdentifier);
+        setLiked(savedIds.includes(String(id)));
+    }, [id, viewerIdentifier]);
 
     const numericPrice = Number(price);
     const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0;
@@ -133,7 +181,25 @@ const Post = ({
 
     const handleLike = (e) => {
         e.stopPropagation();
-        setLiked(!liked);
+
+        if (!id) {
+            return;
+        }
+
+        const listingId = String(id);
+        const nextLiked = !liked;
+        setLiked(nextLiked);
+
+        if (!viewerIdentifier) {
+            return;
+        }
+
+        const savedIds = getSavedListingIds(viewerIdentifier);
+        const nextSavedIds = nextLiked
+            ? Array.from(new Set([...savedIds, listingId]))
+            : savedIds.filter((savedId) => savedId !== listingId);
+
+        setSavedListingIds(viewerIdentifier, nextSavedIds);
     };
 
     const handleOpenPost = () => {
