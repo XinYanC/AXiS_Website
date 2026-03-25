@@ -49,7 +49,7 @@ describe('listings API', () => {
     const file = new File(['file-content'], 'square.png', { type: 'image/png' })
     apiRequest
       .mockRejectedValueOnce(new Error('API error (422): image field required'))
-      .mockResolvedValueOnce({ secure_url: 'https://res.cloudinary.com/demo/image/upload/v1/fallback.png' })
+      .mockResolvedValueOnce({ url: 'https://res.cloudinary.com/demo/image/upload/v1/fallback.png' })
 
     const uploadedUrl = await uploadListingImage(file)
 

@@ -9,35 +9,19 @@ import '../styles/savedItems.css';
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
 
 const toUsersArray = (usersResponse) => {
-  if (usersResponse && (usersResponse.Users || usersResponse.User)) {
-    return Object.values(usersResponse.Users || usersResponse.User);
+  const bucket = usersResponse?.User;
+  if (bucket) {
+    return Object.values(bucket);
   }
-
-  return Array.isArray(usersResponse) ? usersResponse : [];
+  return [];
 };
 
 const resolveSavedPostIds = (user) => {
-  const savedField =
-    user?.saved_listings ||
-    user?.savedListings ||
-    user?.saved_posts ||
-    user?.savedPosts ||
-    user?.saved_items ||
-    user?.savedItems ||
-    user?.favorites ||
-    [];
-
-  if (Array.isArray(savedField)) {
-    return savedField.map((item) => String(item || '').trim()).filter(Boolean);
+  const savedField = user?.saved_listings;
+  if (!Array.isArray(savedField)) {
+    return [];
   }
-
-  if (savedField && typeof savedField === 'object') {
-    return Object.values(savedField)
-      .map((item) => String(item || '').trim())
-      .filter(Boolean);
-  }
-
-  return [];
+  return savedField.map((item) => String(item || '').trim()).filter(Boolean);
 };
 
 const SavedItems = () => {
@@ -69,7 +53,7 @@ const SavedItems = () => {
     return savedListings.filter((listing) => {
       const title = String(listing?.title || '').toLowerCase();
       const description = String(listing?.description || '').toLowerCase();
-      const location = String(listing?.meetup_location || listing?.location || '').toLowerCase();
+      const location = String(listing?.meetup_location || '').toLowerCase();
 
       return title.includes(needle) || description.includes(needle) || location.includes(needle);
     });
@@ -90,8 +74,8 @@ const SavedItems = () => {
         const users = toUsersArray(usersResponse);
 
         const matchedUser = users.find((candidate) => {
-          const candidateUsername = normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name);
-          const candidateEmail = normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email);
+          const candidateUsername = normalizeIdentifier(candidate?.username);
+          const candidateEmail = normalizeIdentifier(candidate?.email);
 
           return candidateUsername === viewerIdentifier || candidateEmail === viewerIdentifier;
         });
@@ -106,15 +90,13 @@ const SavedItems = () => {
         const savedListingIds = backendSavedIds;
 
         const listingsResponse = await readListings();
-        const listingsArray = listingsResponse && listingsResponse.Listings
+        const listingsArray = listingsResponse?.Listings
           ? Object.values(listingsResponse.Listings)
-          : Array.isArray(listingsResponse)
-            ? listingsResponse
-            : [];
+          : [];
 
         const savedIdSet = new Set(savedListingIds.map((id) => String(id)));
         const matchingSavedListings = listingsArray.filter((listing) =>
-          savedIdSet.has(String(listing?._id || listing?.id || ''))
+          savedIdSet.has(String(listing?._id ?? ''))
         );
 
         setSavedListings(matchingSavedListings);
@@ -157,16 +139,15 @@ const SavedItems = () => {
           <div className="saved-items-grid">
             {filteredSavedListings.map((listing) => (
               <Post
-                key={listing._id || listing.id}
-                id={listing._id || listing.id}
+                key={listing._id}
+                id={listing._id}
                 title={listing.title}
                 description={listing.description}
                 imageUrls={getListingImageUrls(listing)}
-                location={listing.meetup_location || listing.location}
+                location={listing.meetup_location}
                 transactionType={listing.transaction_type}
                 price={listing.price}
                 owner={listing.owner}
-                sellerRating={listing.sellerRating || listing.rating || 4.8}
               />
             ))}
           </div>

@@ -98,70 +98,22 @@ const CameraIcon = () => (
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
 
 const toUsersArray = (usersResponse) => {
-    if (usersResponse && (usersResponse.Users || usersResponse.User)) {
-        return Object.values(usersResponse.Users || usersResponse.User);
+    const bucket = usersResponse?.User;
+    if (bucket) {
+        return Object.values(bucket);
     }
-
-    return Array.isArray(usersResponse) ? usersResponse : [];
+    return [];
 };
 
 const resolveSavedPostIds = (user) => {
     if (!user) {
-        console.debug('resolveSavedPostIds - no user provided');
         return [];
     }
-
-    // Check which field exists
-    const hasSavedListings = user?.saved_listings;
-    const hasSavedListingsCamel = user?.savedListings;
-    const hasSavedPosts = user?.saved_posts;
-    const hasSavedPostsCamel = user?.savedPosts;
-    const hasFavorites = user?.favorites;
-
-    console.debug('resolveSavedPostIds - checking fields:', {
-        saved_listings: hasSavedListings,
-        savedListings: hasSavedListingsCamel,
-        saved_posts: hasSavedPosts,
-        savedPosts: hasSavedPostsCamel,
-        favorites: hasFavorites,
-    });
-
-    const savedField =
-        user?.saved_listings ||
-        user?.savedListings ||
-        user?.saved_posts ||
-        user?.savedPosts ||
-        user?.favorites ||
-        null;
-
-    if (Array.isArray(savedField)) {
-        const ids = savedField
-            .map((item) => {
-                if (item && typeof item === 'object' && !Array.isArray(item)) {
-                    return String(item.id || item.ID || item._id || item || '').trim();
-                }
-                return String(item || '').trim();
-            })
-            .filter(Boolean);
-        console.debug('resolveSavedPostIds - array format, found IDs:', ids);
-        return ids;
+    const savedField = user?.saved_listings;
+    if (!Array.isArray(savedField)) {
+        return [];
     }
-
-    if (savedField && typeof savedField === 'object') {
-        const ids = Object.values(savedField)
-            .map((item) => {
-                if (item && typeof item === 'object' && !Array.isArray(item)) {
-                    return String(item.id || item.ID || item._id || item || '').trim();
-                }
-                return String(item || '').trim();
-            })
-            .filter(Boolean);
-        console.debug('resolveSavedPostIds - object format, found IDs:', ids);
-        return ids;
-    }
-
-    console.debug('resolveSavedPostIds - savedField is neither array nor object, returning []');
-    return [];
+    return savedField.map((item) => String(item || '').trim()).filter(Boolean);
 };
 
 const getViewerIdentity = () => {
@@ -193,8 +145,8 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
         const users = toUsersArray(usersResponse);
 
         const matchedUser = users.find((candidate) => {
-            const candidateUsername = normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name);
-            const candidateEmail = normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email);
+            const candidateUsername = normalizeIdentifier(candidate?.username);
+            const candidateEmail = normalizeIdentifier(candidate?.email);
 
             return (
                 (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
@@ -211,14 +163,9 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
             ? Array.from(new Set([...currentSaved, normalizedListingId]))
             : currentSaved.filter((savedId) => savedId !== normalizedListingId);
 
-        console.log(`syncLikeAndSaveToBackend: User ${viewerKey}, nextLiked=${nextLiked}, currentSaved=[${currentSaved.join(', ')}], nextSaved=[${nextSaved.join(', ')}]`);
-
-        const userIdentifierForUpdate =
-            matchedUser?.username ||
-            matchedUser?.Username ||
-            matchedUser?.user_name ||
-            viewer.username ||
-            viewer.email;
+        console.log(`syncLikeAndSaveToBackend: User ${viewerKey}, nextLiked=$
+                {nextLiked}, currentSaved=[${currentSaved.join(', ')}], nextSaved=[${nextSaved.join(', ')}]`);
+        const userIdentifierForUpdate = matchedUser?.username;
 
         if (userIdentifierForUpdate) {
             // Update user's saved_listings
@@ -231,19 +178,16 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
         // Calculate new like count from current users data (before the update for accuracy)
         const numLikes = users.reduce((count, candidate) => {
             const candidateSaved = resolveSavedPostIds(candidate);
-            const candidateKey =
-                normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name) ||
-                normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email) ||
-                normalizeIdentifier(candidate?._id || candidate?.id);
+            const candidateUsername = normalizeIdentifier(candidate?.username);
+            const candidateEmail = normalizeIdentifier(candidate?.email);
+            const matchedUsername = normalizeIdentifier(matchedUser?.username);
+            const matchedEmail = normalizeIdentifier(matchedUser?.email);
 
-            const matchedKey =
-                normalizeIdentifier(matchedUser?.username || matchedUser?.Username || matchedUser?.user_name) ||
-                normalizeIdentifier(matchedUser?.email || matchedUser?.Email || matchedUser?.user_email) ||
-                normalizeIdentifier(matchedUser?._id || matchedUser?.id);
+            const isMatchedUser =
+                (matchedUsername && candidateUsername === matchedUsername) ||
+                (matchedEmail && candidateEmail === matchedEmail);
 
-            const effectiveSaved = candidateKey && matchedKey && candidateKey === matchedKey
-                ? nextSaved
-                : candidateSaved;
+            const effectiveSaved = isMatchedUser ? nextSaved : candidateSaved;
 
             return effectiveSaved.includes(normalizedListingId) ? count + 1 : count;
         }, 0);
@@ -320,8 +264,8 @@ const Post = ({
                 console.log(`Post ${id}: Users array has ${users.length} users`);
 
                 const matchedUser = users.find((candidate) => {
-                    const candidateUsername = normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name);
-                    const candidateEmail = normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email);
+                    const candidateUsername = normalizeIdentifier(candidate?.username);
+                    const candidateEmail = normalizeIdentifier(candidate?.email);
 
                     return (
                         (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
@@ -339,7 +283,7 @@ const Post = ({
                 const savedIds = resolveSavedPostIds(matchedUser);
                 const normalizedId = String(id).trim();
                 const isLiked = savedIds.includes(normalizedId);
-                
+
                 console.log(`Post ${id}: Checking if liked - normalizedId="${normalizedId}", savedIds=[${savedIds.join(', ')}], result=${isLiked}`);
                 setLiked(isLiked);
             } catch (err) {

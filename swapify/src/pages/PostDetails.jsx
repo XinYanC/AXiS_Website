@@ -20,32 +20,19 @@ const normalizeEmail = (value) => String(value || '').trim().toLowerCase()
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase()
 
 const toUsersArray = (usersResponse) => {
-  if (usersResponse && (usersResponse.Users || usersResponse.User)) {
-    return Object.values(usersResponse.Users || usersResponse.User)
+  const bucket = usersResponse?.User
+  if (bucket) {
+    return Object.values(bucket)
   }
-  return Array.isArray(usersResponse) ? usersResponse : []
+  return []
 }
 
 const resolveSavedPostIds = (user) => {
-  const savedField =
-    user?.saved_listings ||
-    user?.savedListings ||
-    user?.saved_posts ||
-    user?.savedPosts ||
-    user?.favorites ||
-    []
-
-  if (Array.isArray(savedField)) {
-    return savedField.map((item) => String(item || '').trim()).filter(Boolean)
+  const savedField = user?.saved_listings
+  if (!Array.isArray(savedField)) {
+    return []
   }
-
-  if (savedField && typeof savedField === 'object') {
-    return Object.values(savedField)
-      .map((item) => String(item || '').trim())
-      .filter(Boolean)
-  }
-
-  return []
+  return savedField.map((item) => String(item || '').trim()).filter(Boolean)
 }
 
 const getStoredViewerIdentity = () => {
@@ -91,8 +78,8 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
     const users = toUsersArray(usersResponse)
 
     const matchedUser = users.find((candidate) => {
-      const candidateUsername = normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name)
-      const candidateEmail = normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email)
+      const candidateUsername = normalizeIdentifier(candidate?.username)
+      const candidateEmail = normalizeIdentifier(candidate?.email)
 
       return (
         (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
@@ -109,13 +96,7 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
       ? Array.from(new Set([...currentSaved, normalizedListingId]))
       : currentSaved.filter((savedId) => savedId !== normalizedListingId)
 
-    const userIdentifierForUpdate =
-      matchedUser?.username ||
-      matchedUser?.Username ||
-      matchedUser?.user_name ||
-      viewer.username ||
-      viewer.email
-
+    const userIdentifierForUpdate = matchedUser?.username
     if (userIdentifierForUpdate) {
       await updateUser(userIdentifierForUpdate, {
         saved_listings: nextSaved,
@@ -125,19 +106,16 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
     // Calculate new like count from current users data
     const numLikes = users.reduce((count, candidate) => {
       const candidateSaved = resolveSavedPostIds(candidate)
-      const candidateKey =
-        normalizeIdentifier(candidate?.username || candidate?.Username || candidate?.user_name) ||
-        normalizeIdentifier(candidate?.email || candidate?.Email || candidate?.user_email) ||
-        normalizeIdentifier(candidate?._id || candidate?.id)
+      const candidateUsername = normalizeIdentifier(candidate?.username)
+      const candidateEmail = normalizeIdentifier(candidate?.email)
+      const matchedUsername = normalizeIdentifier(matchedUser?.username)
+      const matchedEmail = normalizeIdentifier(matchedUser?.email)
 
-      const matchedKey =
-        normalizeIdentifier(matchedUser?.username || matchedUser?.Username || matchedUser?.user_name) ||
-        normalizeIdentifier(matchedUser?.email || matchedUser?.Email || matchedUser?.user_email) ||
-        normalizeIdentifier(matchedUser?._id || matchedUser?.id)
+      const isMatchedUser =
+        (matchedUsername && candidateUsername === matchedUsername) ||
+        (matchedEmail && candidateEmail === matchedEmail)
 
-      const effectiveSaved = candidateKey && matchedKey && candidateKey === matchedKey
-        ? nextSaved
-        : candidateSaved
+      const effectiveSaved = isMatchedUser ? nextSaved : candidateSaved
 
       return effectiveSaved.includes(normalizedListingId) ? count + 1 : count
     }, 0)
@@ -196,23 +174,14 @@ function PostDetails() {
       setListing(listingData)
 
       const usersResponse = await readUsers()
-      const usersArray = usersResponse && (usersResponse.Users || usersResponse.User)
-        ? Object.values(usersResponse.Users || usersResponse.User)
-        : Array.isArray(usersResponse)
-          ? usersResponse
-          : []
+      const usersArray = toUsersArray(usersResponse)
 
-      const listingOwnerUsername = normalizeUsername(listingData.owner)
-      const listingOwnerEmail = normalizeEmail(listingData.owner_email || listingData.ownerEmail)
+      const ownerRaw = String(listingData.owner || '').trim()
 
       const matchedSeller = usersArray.find((candidate) => {
-        const candidateUsername = normalizeUsername(candidate?.username || candidate?.Username || candidate?.user_name)
-        const candidateEmail = normalizeEmail(candidate?.email || candidate?.Email || candidate?.user_email)
-
-        return (
-          (listingOwnerUsername && candidateUsername === listingOwnerUsername) ||
-          (listingOwnerEmail && candidateEmail === listingOwnerEmail)
-        )
+        const u = normalizeIdentifier(candidate?.username)
+        const o = normalizeIdentifier(ownerRaw)
+        return u && o && u === o
       })
 
       setSeller(matchedSeller || null)
@@ -222,13 +191,13 @@ function PostDetails() {
       const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
       if (viewerKey) {
         const matchedUser = usersArray.find((candidate) => {
-          const candidateUsername = normalizeUsername(candidate?.username || candidate?.Username || candidate?.user_name)
-          const candidateEmail = normalizeEmail(candidate?.email || candidate?.Email || candidate?.user_email)
+          const candidateUsername = normalizeIdentifier(candidate?.username)
+          const candidateEmail = normalizeIdentifier(candidate?.email)
 
           return (
             (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
             (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-          );
+          )
         })
 
         const savedIds = matchedUser ? resolveSavedPostIds(matchedUser) : []
@@ -367,37 +336,14 @@ function PostDetails() {
   }, [listing?.price])
 
   const likesCount = useMemo(() => {
-    const numericLikes = Number(
-      listing?.num_likes ??
-      listing?.numLikes ??
-      listing?.likes_count ??
-      listing?.likesCount ??
-      listing?.likes
-    )
-
+    const numericLikes = Number(listing?.num_likes)
     if (Number.isFinite(numericLikes) && numericLikes >= 0) {
       return numericLikes
     }
-
-    const likesCollection =
-      listing?.likes ??
-      listing?.liked_by ??
-      listing?.likedBy ??
-      listing?.favorites ??
-      listing?.saved_by
-
-    if (Array.isArray(likesCollection)) {
-      return likesCollection.length
-    }
-
-    if (likesCollection && typeof likesCollection === 'object') {
-      return Object.keys(likesCollection).length
-    }
-
     return 0
   }, [listing])
 
-  const locationLabel = listing?.meetup_location || listing?.location || 'Location not specified'
+  const locationLabel = listing?.meetup_location || 'Location not specified'
   const hasLocation = Boolean(String(locationLabel || '').trim() && locationLabel !== 'Location not specified')
   const mapEmbedUrl = hasLocation
     ? `https://www.google.com/maps?q=${encodeURIComponent(String(locationLabel))}&output=embed`
@@ -407,38 +353,33 @@ function PostDetails() {
     : ''
 
   const sellerUsername =
-    normalizeUsername(seller?.username || seller?.Username || seller?.user_name) ||
-    normalizeUsername(listing?.owner)
+    normalizeUsername(seller?.username) || normalizeUsername(listing?.owner)
 
   const sellerDisplayName =
-    seller?.name ||
-    seller?.username ||
-    seller?.Username ||
-    listing?.owner ||
-    'Unknown seller'
+    seller?.name || seller?.username || listing?.owner || 'Unknown seller'
 
   const sellerProfilePath = sellerUsername ? `/profile/${encodeURIComponent(sellerUsername)}` : '/login'
   const messageSellerPath = sellerUsername
     ? `/messages?seller=${encodeURIComponent(sellerDisplayName)}&listingId=${encodeURIComponent(id || '')}&listingTitle=${encodeURIComponent(listing?.title || '')}`
     : '/login'
 
-  const sellerRatingValue = Number(seller?.rating ?? seller?.sellerRating)
+  const sellerRatingValue = Number(seller?.rating)
   const sellerRating = Number.isFinite(sellerRatingValue) && sellerRatingValue > 0
     ? sellerRatingValue.toFixed(1)
     : 'N/A'
   const viewerIdentity = getStoredViewerIdentity()
-  const sellerEmail = normalizeEmail(seller?.email || seller?.Email || seller?.user_email)
-  const listingOwnerUsername = normalizeUsername(listing?.owner)
-  const listingOwnerEmail = normalizeEmail(listing?.owner_email || listing?.ownerEmail)
+  const listingOwnerRaw = String(listing?.owner || '').trim()
   const isOwnedByCurrentUser = Boolean(
-    (viewerIdentity.username && (
-      viewerIdentity.username === sellerUsername ||
-      viewerIdentity.username === listingOwnerUsername
-    )) ||
-    (viewerIdentity.email && (
-      viewerIdentity.email === sellerEmail ||
-      viewerIdentity.email === listingOwnerEmail
-    ))
+    (viewerIdentity.username &&
+      normalizeIdentifier(viewerIdentity.username) === normalizeIdentifier(listingOwnerRaw)) ||
+    (viewerIdentity.email &&
+      normalizeIdentifier(viewerIdentity.email) === normalizeIdentifier(listingOwnerRaw)) ||
+    (viewerIdentity.username &&
+      seller?.username &&
+      normalizeIdentifier(viewerIdentity.username) === normalizeIdentifier(seller.username)) ||
+    (viewerIdentity.email &&
+      seller?.email &&
+      normalizeIdentifier(viewerIdentity.email) === normalizeIdentifier(seller.email))
   )
   const isSold = String(listing?.status || '').toLowerCase() === 'sold'
 

@@ -12,23 +12,9 @@ const getUploadedImageUrl = (response) => {
 		}
 	}
 
-	const candidate =
-		response?.url ||
-		response?.URL ||
-		response?.secure_url ||
-		response?.image ||
-		response?.image_url ||
-		response?.ImageURL ||
-		response?.['Image URL'] ||
-		response?.imageUrl ||
-		response?.link ||
-		response?.data?.url ||
-		response?.data?.secure_url ||
-		response?.result?.url ||
-		response?.result?.secure_url
-
-	if (typeof candidate === 'string' && candidate.trim()) {
-		return candidate.trim()
+	const url = response && typeof response === 'object' ? response.url : undefined
+	if (typeof url === 'string' && url.trim()) {
+		return url.trim()
 	}
 
 	throw new Error('Upload succeeded but no image URL was returned by the server.')
@@ -109,7 +95,7 @@ export const readListingById = async (id) => {
 	const normalizedId = String(id || '')
 
 	return (
-		listingsArray.find((listing) => String(listing?._id || listing?.id || '') === normalizedId) ||
+		listingsArray.find((listing) => String(listing?._id ?? '') === normalizedId) ||
 		null
 	)
 }

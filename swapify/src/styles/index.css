@@ -294,9 +294,9 @@ main {
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 24px;
-  margin-bottom: 48px;
+  align-items: start;
+  gap: 20px;
+  padding: 24px 16px;
 }
 
 
@@ -323,6 +323,7 @@ main {
     grid-template-columns: 1fr;
   }
 }
+
 :root {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;

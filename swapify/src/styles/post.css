@@ -58,6 +58,7 @@
     margin: 0 0 6px 0;
     line-height: 1.4;
 }
+
 /* Price overlay on image */
 .post-image-container {
     position: relative;
@@ -130,6 +131,7 @@
     font-weight: 500;
     z-index: 2;
 }
+
 .post-price-tag {
     display: none;
 }
@@ -195,9 +197,11 @@
     0% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.15);
     }
+
     100% {
         transform: scale(1);
     }
@@ -315,58 +319,25 @@
     color: #2d6b6b;
 }
 
-.posts-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    align-items: start;
-    gap: 20px;
-    margin-top: 24px;
-    padding: 0 16px;
-}
-
-@media (max-width: 1200px) {
-    .posts-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 900px) {
-    .posts-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 700px) {
-    .posts-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 480px) {
-    .posts-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* Responsive adjustments */
 @media (max-width: 700px) {
     .post-container {
         padding: 14px;
     }
-    
+
     .post-image-container {
         margin-bottom: 10px;
     }
-    
+
     .post-title {
         font-size: 0.95rem;
     }
-    
+
     .transaction-icon {
         width: 32px;
         height: 32px;
     }
-    
+
     .transaction-icon svg {
         width: 16px;
         height: 16px;
@@ -377,14 +348,14 @@
     .post-container {
         padding: 16px;
     }
-    
+
     .post-image-container {
         margin-bottom: 12px;
     }
 }
 
 /* Empty state styling */
-.posts-grid > p {
+.posts-grid>p {
     grid-column: 1 / -1;
     text-align: center;
     padding: 40px;
