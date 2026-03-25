@@ -1,21 +1,10 @@
 import React from 'react'
-import {
-  PickupIcon,
-  BuyIcon,
-  SellIcon,
-  DonationIcon,
-  DropOffIcon,
-  TradeIcon,
-} from './post'
+import { SellIcon, DonationIcon } from './post'
 import '../styles/postIconsHelp.css'
 
 const LEGEND_ITEMS = [
-  { Icon: PickupIcon, label: 'Pickup' },
-  { Icon: BuyIcon, label: 'Buy' },
+  { Icon: DonationIcon, label: 'Free' },
   { Icon: SellIcon, label: 'Sell' },
-  { Icon: DonationIcon, label: 'Donation' },
-  { Icon: DropOffIcon, label: 'Drop-off' },
-  { Icon: TradeIcon, label: 'Trade/Swap' },
 ]
 
 function PostIconsHelp({ isOpen, onClose }) {
@@ -47,12 +36,12 @@ function PostIconsHelp({ isOpen, onClose }) {
           </button>
         </div>
         <ul className="post-icons-help-list">
-          {LEGEND_ITEMS.map(({ Icon, label }) => (
-            <li key={label} className="post-icons-help-item">
+          {LEGEND_ITEMS.map((item) => (
+            <li key={item.label} className="post-icons-help-item">
               <span className="post-icons-help-icon">
-                <Icon />
+                {React.createElement(item.Icon)}
               </span>
-              <span className="post-icons-help-label">{label}</span>
+              <span className="post-icons-help-label">{item.label}</span>
             </li>
           ))}
         </ul>

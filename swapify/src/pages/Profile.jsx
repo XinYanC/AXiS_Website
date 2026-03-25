@@ -52,12 +52,6 @@ const Profile = () => {
     const viewerUsername = normalizeUsername(localStorage.getItem('swapify.username'));
     const viewerEmail = normalizeEmail(localStorage.getItem('swapify.email'));
 
-    const getCandidateUsername = (candidate) =>
-        normalizeUsername(candidate?.username || '');
-
-    const getCandidateEmail = (candidate) =>
-        normalizeEmail(candidate?.email || '');
-
     useEffect(() => {
         const fetchUserData = async () => {
             if (!username) {
@@ -88,8 +82,8 @@ const Profile = () => {
                 const candidateEmails = [routeAsEmail, storedEmail].filter(Boolean);
 
                 const profileUser = usersArray.find((candidate) => {
-                    const candidateUsername = getCandidateUsername(candidate);
-                    const candidateEmail = getCandidateEmail(candidate);
+                    const candidateUsername = normalizeUsername(candidate?.username || '');
+                    const candidateEmail = normalizeEmail(candidate?.email || '');
 
                     const usernameMatch = candidateUsernames.includes(candidateUsername);
                     const emailMatch = candidateEmail && candidateEmails.includes(candidateEmail);
@@ -105,7 +99,7 @@ const Profile = () => {
                 }
 
                 const profileUsernameKey =
-                    getCandidateUsername(profileUser) || routeAsUsername;
+                    normalizeUsername(profileUser?.username || '') || routeAsUsername;
                 const listingsResponse = await readListingsByUser(profileUsernameKey);
                 const allListings = listingsResponse?.Listings
                     ? Object.values(listingsResponse.Listings)

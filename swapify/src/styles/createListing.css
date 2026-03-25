@@ -119,7 +119,7 @@
 
 .transaction-button-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
 }
 
@@ -159,16 +159,10 @@
     height: 100%;
 }
 
-.transaction-option-button.drop-off {
-    background: #f2f6ff;
-    color: #274690;
-    border-color: #c6d7ff;
-}
-
-.transaction-option-button.pickup {
-    background: #f1faef;
-    color: #2f6a2f;
-    border-color: #cbe7c7;
+.transaction-option-button.free {
+    background: #faf0fa;
+    color: #7c537c;
+    border-color: #e0d0e0;
 }
 
 .transaction-option-button.sell {
@@ -177,12 +171,8 @@
     border-color: #f3cfb4;
 }
 
-.transaction-option-button.drop-off.selected {
-    box-shadow: 0 0 0 2px rgba(39, 70, 144, 0.25);
-}
-
-.transaction-option-button.pickup.selected {
-    box-shadow: 0 0 0 2px rgba(47, 106, 47, 0.22);
+.transaction-option-button.free.selected {
+    box-shadow: 0 0 0 2px rgba(124, 83, 124, 0.22);
 }
 
 .transaction-option-button.sell.selected {

@@ -27,13 +27,10 @@ describe('users API', () => {
     expect(apiPost).toHaveBeenCalledWith('/users/create', payload)
   })
 
-  it('deleteUser calls apiDelete with /users/delete and username in body', async () => {
+  it('deleteUser calls apiDelete with /users/delete and username query param', async () => {
     apiDelete.mockResolvedValue(null)
     await deleteUser('tester')
-    expect(apiDelete).toHaveBeenCalledWith('/users/delete', {
-      body: JSON.stringify({ username: 'tester' }),
-      headers: { 'Content-Type': 'application/json' },
-    })
+    expect(apiDelete).toHaveBeenCalledWith('/users/delete?username=tester')
   })
 
   it('readUsers calls apiGet with /users/read', async () => {

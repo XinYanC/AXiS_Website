@@ -59,13 +59,10 @@ describe('listings API', () => {
     expect(uploadedUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/fallback.png')
   })
 
-  it('deleteListing calls apiDelete with /listings/delete and id in body', async () => {
+  it('deleteListing calls apiDelete with /listings/delete and id query param', async () => {
     apiDelete.mockResolvedValue(null)
     await deleteListing('abc123')
-    expect(apiDelete).toHaveBeenCalledWith('/listings/delete', {
-      body: JSON.stringify({ id: 'abc123' }),
-      headers: { 'Content-Type': 'application/json' },
-    })
+    expect(apiDelete).toHaveBeenCalledWith('/listings/delete?id=abc123')
   })
 
   it('readListings calls apiGet with /listings/read', async () => {

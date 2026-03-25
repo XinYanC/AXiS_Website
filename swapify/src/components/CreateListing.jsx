@@ -1,29 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createListing, uploadListingImage } from '../api'
+import { DonationIcon, SellIcon } from './post'
 import '../styles/createListing.css'
-
-const PickupIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-)
-
-const DropOffIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M12 2V12M12 12L15 9M12 12L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M5 12H3C3 14.3869 3.94821 16.6761 5.63604 18.364C7.32387 20.0518 9.61305 21 12 21C14.3869 21 16.6761 20.0518 18.364 18.364C20.0518 16.6761 21 14.3869 21 12H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-)
-
-const SellIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M12 2V22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-)
 
 const getStoredAuthState = () => {
     if (typeof window === 'undefined') {
@@ -49,7 +28,7 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
     const ownerIdentifier = String(currentUserIdentifier || getStoredOwnerIdentifier()).trim()
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
-    const [transactionType, setTransactionType] = useState('pickup')
+    const [transactionType, setTransactionType] = useState('sell')
     const [meetupLocation, setMeetupLocation] = useState('')
     const [price, setPrice] = useState('')
     const [uploadedImageUrls, setUploadedImageUrls] = useState([])
@@ -212,7 +191,10 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                 transaction_type: transactionType,
                 owner: ownerIdentifier,
                 meetup_location: meetupLocation,
-                price: price ? parseFloat(price) : 0
+                price:
+                    transactionType === 'sell' && price !== '' && price != null
+                        ? parseFloat(price)
+                        : null,
             }
 
             if (uploadedImageUrls.length > 0) {
@@ -231,7 +213,7 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
             setTimeout(() => {
                 setTitle('')
                 setDescription('')
-                setTransactionType('pickup')
+                setTransactionType('sell')
                 setMeetupLocation('')
                 setPrice('')
                 setUploadedImageUrls([])
@@ -331,21 +313,12 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                         <div className="transaction-button-grid">
                             <button
                                 type="button"
-                                className={`transaction-option-button drop-off ${transactionType === 'drop-off' ? 'selected' : ''}`}
-                                onClick={() => handleTransactionTypeSelect('drop-off')}
-                                aria-pressed={transactionType === 'drop-off'}
+                                className={`transaction-option-button free ${transactionType === 'free' ? 'selected' : ''}`}
+                                onClick={() => handleTransactionTypeSelect('free')}
+                                aria-pressed={transactionType === 'free'}
                             >
-                                <span className="transaction-option-icon"><DropOffIcon /></span>
-                                <span>Drop-off</span>
-                            </button>
-                            <button
-                                type="button"
-                                className={`transaction-option-button pickup ${transactionType === 'pickup' ? 'selected' : ''}`}
-                                onClick={() => handleTransactionTypeSelect('pickup')}
-                                aria-pressed={transactionType === 'pickup'}
-                            >
-                                <span className="transaction-option-icon"><PickupIcon /></span>
-                                <span>Pickup</span>
+                                <span className="transaction-option-icon"><DonationIcon /></span>
+                                <span>Free</span>
                             </button>
                             <button
                                 type="button"

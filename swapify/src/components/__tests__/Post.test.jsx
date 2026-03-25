@@ -17,7 +17,7 @@ const baseProps = {
   description: 'Nice description',
   imageUrl: null,
   location: 'NYC',
-  transactionType: 'pickup',
+  transactionType: 'sell',
   price: 10,
   owner: 'alice',
 }

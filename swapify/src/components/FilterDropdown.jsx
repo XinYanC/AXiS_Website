@@ -2,10 +2,9 @@ import { useState } from 'react'
 import './FilterDropdown.css'
 
 const transactionTypes = [
-  '',
-  'Sell',
-  'Trade',
-  'Free',
+  { value: '', label: 'Any' },
+  { value: 'sell', label: 'Sell' },
+  { value: 'free', label: 'Free' },
 ]
 
 const FilterDropdown = ({ filters, onChange, onClose }) => {
@@ -52,9 +51,9 @@ const FilterDropdown = ({ filters, onChange, onClose }) => {
             value={localFilters.transactionType || ''}
             onChange={handleChange}
           >
-            {transactionTypes.map((type) => (
-              <option key={type} value={type}>
-                {type ? type : 'Any'}
+            {transactionTypes.map(({ value, label }) => (
+              <option key={value || 'any'} value={value}>
+                {label}
               </option>
             ))}
           </select>

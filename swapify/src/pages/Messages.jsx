@@ -66,7 +66,6 @@ function Messages() {
     setThreads((prev) => {
       const existing = prev.find((thread) => thread.participantKey === sellerKey)
       if (existing) {
-        setActiveThreadId(existing.id)
         initializedContextRef.current = contextKey
         return prev
       }
@@ -82,25 +81,22 @@ function Messages() {
           : [],
       }
 
-      setActiveThreadId(newThread.id)
       initializedContextRef.current = contextKey
       return [newThread, ...prev]
     })
   }, [seller, sellerKey, listingTitle])
 
-  useEffect(() => {
-    if (!threads.length) {
-      if (activeThreadId) {
-        setActiveThreadId('')
-      }
-      return
+  const resolvedActiveThreadId = useMemo(() => {
+    if (!threads.length) return ''
+    if (activeThreadId && threads.some((t) => t.id === activeThreadId)) {
+      return activeThreadId
     }
-
-    const stillExists = threads.some((thread) => thread.id === activeThreadId)
-    if (!activeThreadId || !stillExists) {
-      setActiveThreadId(threads[0].id)
+    if (sellerKey) {
+      const match = threads.find((t) => t.participantKey === sellerKey)
+      if (match) return match.id
     }
-  }, [threads, activeThreadId])
+    return threads[0].id
+  }, [threads, activeThreadId, sellerKey])
 
   const filteredThreads = useMemo(() => {
     if (!threadFilter.trim()) return threads
@@ -109,8 +105,8 @@ function Messages() {
   }, [threadFilter, threads])
 
   const activeThread = useMemo(
-    () => threads.find((thread) => thread.id === activeThreadId) || null,
-    [threads, activeThreadId]
+    () => threads.find((thread) => thread.id === resolvedActiveThreadId) || null,
+    [threads, resolvedActiveThreadId]
   )
 
   const handleSend = () => {
@@ -161,7 +157,7 @@ function Messages() {
               <button
                 key={thread.id}
                 type="button"
-                className={`dm-thread-item ${thread.id === activeThreadId ? 'active' : ''}`}
+                className={`dm-thread-item ${thread.id === resolvedActiveThreadId ? 'active' : ''}`}
                 onClick={() => setActiveThreadId(thread.id)}
               >
                 <div className="dm-thread-avatar">{thread.participant.charAt(0).toUpperCase()}</div>

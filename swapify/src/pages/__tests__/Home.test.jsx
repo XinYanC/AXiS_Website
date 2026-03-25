@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
-import { render, screen } from '@testing-library/react'
-import * as listingsApi from '../../api/listings'
+import { render } from '@testing-library/react'
 import Home from '../Home.jsx'
 
 describe('Home page', () => {

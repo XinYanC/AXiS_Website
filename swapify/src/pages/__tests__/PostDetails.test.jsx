@@ -59,13 +59,13 @@ describe('PostDetails', () => {
     expect(await screen.findByRole('link', { name: /edit post/i })).toBeInTheDocument()
   })
 
-  it('shows Click to Buy when the listing belongs to another user', async () => {
+  it('shows Buy when the listing belongs to another user', async () => {
     localStorage.setItem('swapify.authenticated', 'true')
     localStorage.setItem('swapify.username', 'bob')
     localStorage.setItem('swapify.email', 'bob@example.com')
 
     renderPostDetails()
 
-    expect(await screen.findByRole('link', { name: /click to buy/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /^buy$/i })).toBeInTheDocument()
   })
 })

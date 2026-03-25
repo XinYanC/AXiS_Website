@@ -207,12 +207,11 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
 const Post = ({
     id,
     title,
-    description,
     imageUrls,
     imageUrl,
     location,
     price = 0,
-    transactionType = 'pickup',
+    transactionType = 'sell',
     owner,
     sellerRating = 4.8
 }) => {
@@ -305,8 +304,12 @@ const Post = ({
         : null;
 
     const formatTransactionType = (type) => {
-        return type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ');
-    };
+        const raw = String(type || '')
+        const t = raw.toLowerCase()
+        if (t === 'free') return 'Free'
+        if (!t) return ''
+        return raw.charAt(0).toUpperCase() + raw.slice(1).replace('-', ' ')
+    }
 
     const displayOwner = owner || 'Unknown User';
 
@@ -425,21 +428,14 @@ const Post = ({
     };
 
     const getTransactionIcon = (type) => {
-        switch (type.toLowerCase()) {
-            case 'pickup':
-                return <PickupIcon />;
-            case 'buy':
-                return <BuyIcon />;
-            case 'sell':
-                return <SellIcon />;
+        switch (String(type || '').toLowerCase()) {
+            case 'free':
             case 'donation':
                 return <DonationIcon />;
-            case 'drop-off':
-                return <DropOffIcon />;
-            case 'trade':
-                return <TradeIcon />;
+            case 'sell':
+                return <SellIcon />;
             default:
-                return <PickupIcon />;
+                return <SellIcon />;
         }
     };
 

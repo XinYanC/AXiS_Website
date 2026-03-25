@@ -317,10 +317,9 @@ function PostDetails() {
   const getBuyButtonText = () => {
     if (isOwnedByCurrentUser) return 'Edit post'
     if (isSold) return 'Sold'
-    if (transactionLabel.toLowerCase().includes('sell')) return 'Buy'
-    if (transactionLabel.toLowerCase().includes('trade')) return 'Trade'
-    if (transactionLabel.toLowerCase().includes('free')) return 'Claim'
-    if (transactionLabel.toLowerCase().includes('rent')) return 'Rent'
+    const t = transactionLabel.toLowerCase()
+    if (t.includes('sell')) return 'Buy'
+    if (t.includes('free')) return 'Claim'
     return 'Continue'
   }
 

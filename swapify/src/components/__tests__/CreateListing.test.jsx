@@ -43,10 +43,9 @@ describe('CreateListing', () => {
 
     expect(screen.getByText('Create New Listing')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /create listing/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /drop-off/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /pickup/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /sell/i })).toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('Price *')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^free$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^sell$/i })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Price *')).toBeInTheDocument()
     expect(screen.queryByPlaceholderText(/owner/i)).not.toBeInTheDocument()
   })
 
@@ -57,13 +56,11 @@ describe('CreateListing', () => {
       </MemoryRouter>,
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /^free$/i }))
     expect(screen.queryByPlaceholderText('Price *')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^sell$/i }))
     expect(screen.getByPlaceholderText('Price *')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: /^pickup$/i }))
-    expect(screen.queryByPlaceholderText('Price *')).not.toBeInTheDocument()
   })
 
   it('submits listing with owner from logged-in user', async () => {
@@ -76,6 +73,7 @@ describe('CreateListing', () => {
     fireEvent.change(screen.getByPlaceholderText('Title *'), { target: { value: 'Desk Lamp' } })
     fireEvent.change(screen.getByPlaceholderText('Description *'), { target: { value: 'Like new.' } })
     fireEvent.change(screen.getByPlaceholderText('Meetup Location *'), { target: { value: 'NYU Bobst' } })
+    fireEvent.change(screen.getByPlaceholderText('Price *'), { target: { value: '12.99' } })
 
     fireEvent.click(screen.getByRole('button', { name: /create listing/i }))
 
@@ -86,6 +84,8 @@ describe('CreateListing', () => {
           description: 'Like new.',
           meetup_location: 'NYU Bobst',
           owner: 'alice',
+          transaction_type: 'sell',
+          price: 12.99,
         }),
       )
     })
