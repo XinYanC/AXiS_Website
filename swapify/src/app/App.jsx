@@ -9,6 +9,7 @@ import './App.css'
 import Profile from "../pages/Profile.jsx";
 import NotFound from '../pages/NotFound.jsx'
 import SavedItems from '../pages/SavedItems.jsx'
+import Map from '../pages/Map.jsx'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -70,6 +71,7 @@ function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/profile/:username" element={<Profile />} />
         <Route path="/saved-items/:username" element={<SavedItems />} />
+        <Route path="/map" element={<Map />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

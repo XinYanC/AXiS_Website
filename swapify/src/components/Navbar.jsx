@@ -115,6 +115,9 @@ function Navbar({
       </div>
 
       <div className="main-nav-right">
+        <Link to="/map" className="nav-map-link">
+          <h2>Map</h2>
+        </Link>
         {authState.isLoggedIn ? (
           <>
             <Link to={savedItemsPath} className="nav-saved-items-link">
