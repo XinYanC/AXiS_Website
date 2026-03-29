@@ -24,19 +24,29 @@ const getAuthState = () => {
 
 function MapListingCard({ listing }) {
   const images = getListingImageUrls(listing)
-  const price = listing.price != null ? `$${listing.price}` : 'Free'
+  const numericPrice = Number(listing.price)
+  const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0
+  const formattedPrice = hasPrice
+    ? `$${numericPrice.toLocaleString(undefined, {
+        minimumFractionDigits: numericPrice % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
+      })}`
+    : 'Free'
 
   return (
     <Link to={`/post/${listing._id}`} className="map-listing-card">
-      {images.length > 0 ? (
-        <img className="map-listing-card-img" src={images[0]} alt={listing.title} />
-      ) : (
-        <div className="map-listing-card-img-placeholder">📦</div>
-      )}
+      <div className="map-listing-card-image-wrapper">
+        {images.length > 0 ? (
+          <img className="map-listing-card-img" src={images[0]} alt={listing.title} />
+        ) : (
+          <div className="map-listing-card-img-placeholder">📦</div>
+        )}
+      </div>
       <div className="map-listing-card-info">
         <p className="map-listing-card-title">{listing.title}</p>
         <p className="map-listing-card-location">{listing.meetup_location}</p>
-        <p className="map-listing-card-price">{price}</p>
+        <p className="map-listing-card-price">{formattedPrice}</p>
+        <p className="map-listing-card-owner">{listing.owner || 'Unknown'}</p>
       </div>
     </Link>
   )
