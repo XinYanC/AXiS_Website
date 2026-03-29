@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createListing, uploadListingImage } from '../api'
 import { DonationIcon, SellIcon } from './post'
+import CitySearchBar from './CitySearchBar'
 import '../styles/createListing.css'
 
 const getStoredAuthState = () => {
@@ -29,7 +30,8 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [transactionType, setTransactionType] = useState('sell')
-    const [meetupLocation, setMeetupLocation] = useState('')
+    const [meetupCityDisplay, setMeetupCityDisplay] = useState('')
+    const [meetupCity, setMeetupCity] = useState('')
     const [price, setPrice] = useState('')
     const [uploadedImageUrls, setUploadedImageUrls] = useState([])
     const [isLoading, setIsLoading] = useState(false)
@@ -174,6 +176,21 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
         }
     }
 
+    const handleCloseForm = () => {
+        // Reset all form fields
+        setTitle('')
+        setDescription('')
+        setTransactionType('sell')
+        setMeetupCityDisplay('')
+        setMeetupCity('')
+        setPrice('')
+        setUploadedImageUrls([])
+        setError('')
+        setSuccess(false)
+        // Close the form
+        onClose()
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setIsLoading(true)
@@ -185,12 +202,16 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                 throw new Error('Could not determine the logged-in user. Please log out and log back in.')
             }
 
+            if (!meetupCity) {
+                throw new Error('Please select a valid meetup city.')
+            }
+
             const payload = {
                 title,
                 description,
                 transaction_type: transactionType,
                 owner: ownerIdentifier,
-                meetup_location: meetupLocation,
+                meetup_location: meetupCity,
                 price:
                     transactionType === 'sell' && price !== '' && price != null
                         ? parseFloat(price)
@@ -214,7 +235,8 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                 setTitle('')
                 setDescription('')
                 setTransactionType('sell')
-                setMeetupLocation('')
+                setMeetupCityDisplay('')
+                setMeetupCity('')
                 setPrice('')
                 setUploadedImageUrls([])
                 setSuccess(false)
@@ -231,17 +253,17 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
     if (!isOpen) return null
 
     return (
-        <div className="create-listing-overlay" onClick={onClose}>
+        <div className="create-listing-overlay" onClick={handleCloseForm}>
             <div className="create-listing-card" onClick={(e) => e.stopPropagation()}>
                 <div className="create-listing-header">
                     <h2>{canCreateListing ? 'Create New Listing' : 'Sign Up Required'}</h2>
-                    <button className="close-button" onClick={onClose}>&times;</button>
+                    <button className="close-button" onClick={handleCloseForm}>&times;</button>
                 </div>
 
                 {!canCreateListing ? (
                     <div className="create-listing-auth-required">
                         <p>You need to sign up before posting a listing.</p>
-                        <Link to="/register" className="create-listing-register-button" onClick={onClose}>
+                        <Link to="/register" className="create-listing-register-button" onClick={handleCloseForm}>
                             Go to Registration
                         </Link>
                     </div>
@@ -265,12 +287,10 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                         rows={4}
                     />
 
-                    <input
-                        type="text"
-                        placeholder="Meetup Location *"
-                        value={meetupLocation}
-                        onChange={(e) => setMeetupLocation(e.target.value)}
-                        required
+                    <CitySearchBar
+                        value={meetupCityDisplay}
+                        onChange={setMeetupCityDisplay}
+                        onCitySelect={setMeetupCity}
                     />
 
                     <div className="image-upload-section">

@@ -9,4 +9,4 @@ export const deleteCity = (payload) =>
 	})
 export const readCities = () => apiGet('/cities/read')
 export const searchCities = (query) =>
-	apiGet(`/cities/search?query=${encodeURIComponent(query)}`)
+	apiGet(`/cities/search?q=${encodeURIComponent(query)}`)
