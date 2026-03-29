@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import FullLogo from '../assets/FullLogo.PNG'
 import ProfileAvatar from './ProfileAvatar'
 import FilterDropdown from './FilterDropdown'
@@ -34,6 +34,7 @@ function Navbar({
   filters = {},
   onFilterChange,
 }) {
+  const location = useLocation()
   const [authState, setAuthState] = useState(getAuthState)
 
   useEffect(() => {
@@ -115,8 +116,8 @@ function Navbar({
       </div>
 
       <div className="main-nav-right">
-        <Link to="/map" className="nav-map-link">
-          <h2>Map</h2>
+        <Link to={location.pathname === '/grid' ? '/' : '/grid'} className="nav-map-link">
+          <h2>{location.pathname === '/grid' ? 'Map' : 'Grid'}</h2>
         </Link>
         {authState.isLoggedIn ? (
           <>

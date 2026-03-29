@@ -165,3 +165,70 @@
   background: #0f172a;
   color: #fff;
 }
+
+/* Location dropper marker */
+.location-dropper-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropper-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.dropper-icon:hover:not(.disabled) {
+  transform: scale(1.15);
+}
+
+.dropper-icon.active {
+  z-index: 1000;
+  transform: scale(1.2);
+}
+
+.dropper-icon.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dropper-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Map popup styling */
+.map-popup {
+  text-align: center;
+}
+
+.popup-state-name {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.popup-count {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}

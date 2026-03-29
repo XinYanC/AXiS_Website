@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
-import { readListings, searchListings } from '../api/listings'
+import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { readStates } from '../api/states'
+import { readCities } from '../api/cities'
+import { readListings } from '../api/listings'
 import Navbar from '../components/Navbar'
-import Post from '../components/post'
+import MapVisualizer from '../components/MapVisualizer'
 import CreateListing from '../components/CreateListing'
-import PostIconsHelp from '../components/PostIconsHelp'
+import STATE_COORDS from '../utils/stateCoordinates'
 import { getListingImageUrls } from '../utils/images'
-import '../styles/createListing.css'
-import '../styles/postIconsHelp.css'
+import '../styles/map.css'
 
 const getAuthState = () => {
   const isLoggedIn = localStorage.getItem('swapify.authenticated') === 'true'
@@ -20,84 +22,123 @@ const getAuthState = () => {
   }
 }
 
+function MapListingCard({ listing }) {
+  const images = getListingImageUrls(listing)
+  const price = listing.price != null ? `$${listing.price}` : 'Free'
+
+  return (
+    <Link to={`/post/${listing._id}`} className="map-listing-card">
+      {images.length > 0 ? (
+        <img className="map-listing-card-img" src={images[0]} alt={listing.title} />
+      ) : (
+        <div className="map-listing-card-img-placeholder">📦</div>
+      )}
+      <div className="map-listing-card-info">
+        <p className="map-listing-card-title">{listing.title}</p>
+        <p className="map-listing-card-location">{listing.meetup_location}</p>
+        <p className="map-listing-card-price">{price}</p>
+      </div>
+    </Link>
+  )
+}
+
 function Home() {
+  const [points, setPoints] = useState([])
+  const [allListings, setAllListings] = useState([])
+  const [listingsByState, setListingsByState] = useState({})
+  const [selectedState, setSelectedState] = useState(null)
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
-  const [isHelpOpen, setIsHelpOpen] = useState(false)
-  const [listings, setListings] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
   const [authState, setAuthState] = useState(getAuthState)
-  const [filters, setFilters] = useState({ location: '', price: '', transactionType: '' })
-
-  const fetchListings = async () => {
-    try {
-      const data = await readListings()
-      console.log('Listings data received:', data)
-
-      // Handle the response structure: { "Listings": { id: {...}, ... }, "Number of Records": X }
-      let listingsArray = []
-      if (data && data.Listings) {
-        // Convert the Listings object to an array
-        listingsArray = Object.values(data.Listings)
-      } else if (Array.isArray(data)) {
-        listingsArray = data
-      }
-
-      console.log('Listings array:', listingsArray)
-      setListings(listingsArray)
-    } catch (err) {
-      console.error('Failed to load listings:', err)
-    }
-  }
 
   useEffect(() => {
-    const loadListings = async () => {
-      await fetchListings()
-    }
-
-    loadListings()
-  }, [])
-
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (!searchQuery) {
-        fetchListings()
-        return
-      }
+    const load = async () => {
       try {
-        const data = await searchListings(searchQuery)
-        let listingsArray = []
-        if (data && data.Listings) {
-          listingsArray = Object.values(data.Listings)
-        } else if (Array.isArray(data)) {
-          listingsArray = data
+        const [statesData, citiesData, listingsData] = await Promise.all([
+          readStates(),
+          readCities(),
+          readListings(),
+        ])
+
+        // Parse states
+        let states = []
+        if (Array.isArray(statesData)) {
+          states = statesData
+        } else if (statesData && statesData.States) {
+          states = Object.values(statesData.States)
         }
-        setListings(listingsArray)
+
+        // Parse cities
+        let cities = []
+        if (Array.isArray(citiesData)) {
+          cities = citiesData
+        } else if (citiesData && citiesData.Cities) {
+          cities = Object.values(citiesData.Cities)
+        }
+
+        // Parse listings
+        let listings = []
+        if (listingsData && listingsData.Listings) {
+          listings = Object.values(listingsData.Listings)
+        } else if (Array.isArray(listingsData)) {
+          listings = listingsData
+        }
+        setAllListings(listings)
+
+        // Build city -> state code mapping
+        const cityToState = new Map()
+        for (const city of cities) {
+          const cityName = city.name?.toLowerCase() ?? ''
+          const stateCode = city.state ?? city.state_code ?? ''
+          if (cityName && stateCode) {
+            cityToState.set(cityName, stateCode)
+          }
+        }
+
+        console.log('City to state mapping:', Object.fromEntries(cityToState))
+        console.log('Listings:', listings.map((l) => ({ title: l.title, location: l.meetup_location })))
+
+        // Assign each listing to a state based on city
+        const byState = {}
+        for (const listing of listings) {
+          const listingCity = listing.meetup_location?.toLowerCase() ?? ''
+          const stateCode = cityToState.get(listingCity)
+          
+          if (stateCode) {
+            if (!byState[stateCode]) byState[stateCode] = []
+            byState[stateCode].push(listing)
+          }
+        }
+        setListingsByState(byState)
+
+        console.log('Listings by state:', byState)
+
+        // Build map points for all states
+        const pts = states
+          .map((s) => {
+            const backendCoords =
+              s.latitude != null && s.longitude != null
+                ? [s.latitude, s.longitude]
+                : null
+            const coords = backendCoords ?? STATE_COORDS[s.code]
+            if (!coords) return null
+            return {
+              lat: coords[0],
+              lng: coords[1],
+              label: s.name,
+              code: s.code,
+              count: byState[s.code]?.length ?? 0,
+            }
+          })
+          .filter(Boolean)
+
+        setPoints(pts)
       } catch (err) {
-        console.error('Search failed:', err)
+        console.error('Failed to load map data:', err)
       }
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
+    }
 
-  // Filter listings client-side
-  const filteredListings = listings.filter((listing) => {
-    // Location filter (city, state, or country)
-    const location = String(listing.meetup_location || '').toLowerCase()
-    const filterLocation = String(filters.location || '').toLowerCase()
-    const matchesLocation = !filterLocation || location.includes(filterLocation)
-
-    // Price filter (max price)
-    const price = Number(listing.price)
-    const filterPrice = Number(filters.price)
-    const matchesPrice = !filterPrice || price <= filterPrice
-
-    // Transaction type filter
-    const transactionType = String(listing.transaction_type || '').toLowerCase()
-    const filterType = String(filters.transactionType || '').toLowerCase()
-    const matchesType = !filterType || transactionType === filterType
-
-    return matchesLocation && matchesPrice && matchesType
-  })
+    load()
+  }, [])
 
   useEffect(() => {
     const syncAuthState = () => {
@@ -113,44 +154,134 @@ function Home() {
     }
   }, [])
 
+  const sidebarListings = useMemo(() => {
+    if (!selectedState) return allListings
+    return listingsByState[selectedState.code] ?? []
+  }, [selectedState, allListings, listingsByState])
+
+  const handleStateClick = (point) => {
+    setSelectedState((prev) => (prev?.label === point.label ? null : point))
+  }
+
+  const handleListingCreated = async () => {
+    // Reload the data after a listing is created
+    try {
+      const [statesData, citiesData, listingsData] = await Promise.all([
+        readStates(),
+        readCities(),
+        readListings(),
+      ])
+
+      // Parse states
+      let states = []
+      if (Array.isArray(statesData)) {
+        states = statesData
+      } else if (statesData && statesData.States) {
+        states = Object.values(statesData.States)
+      }
+
+      // Parse cities
+      let cities = []
+      if (Array.isArray(citiesData)) {
+        cities = citiesData
+      } else if (citiesData && citiesData.Cities) {
+        cities = Object.values(citiesData.Cities)
+      }
+
+      // Parse listings
+      let listings = []
+      if (listingsData && listingsData.Listings) {
+        listings = Object.values(listingsData.Listings)
+      } else if (Array.isArray(listingsData)) {
+        listings = listingsData
+      }
+      setAllListings(listings)
+
+      // Build city -> state code mapping
+      const cityToState = new Map()
+      for (const city of cities) {
+        const cityName = city.name?.toLowerCase() ?? ''
+        const stateCode = city.state ?? city.state_code ?? ''
+        if (cityName && stateCode) {
+          cityToState.set(cityName, stateCode)
+        }
+      }
+
+      // Assign each listing to a state based on city
+      const byState = {}
+      for (const listing of listings) {
+        const listingCity = listing.meetup_location?.toLowerCase() ?? ''
+        const stateCode = cityToState.get(listingCity)
+        
+        if (stateCode) {
+          if (!byState[stateCode]) byState[stateCode] = []
+          byState[stateCode].push(listing)
+        }
+      }
+      setListingsByState(byState)
+
+      // Build map points for ALL states (not just ones with listings)
+      const pts = states
+        .map((s) => {
+          const backendCoords =
+            s.latitude != null && s.longitude != null
+              ? [s.latitude, s.longitude]
+              : null
+          const coords = backendCoords ?? STATE_COORDS[s.code]
+          if (!coords) return null
+          return {
+            lat: coords[0],
+            lng: coords[1],
+            label: s.name,
+            code: s.code,
+            count: byState[s.code]?.length ?? 0,
+          }
+        })
+        .filter(Boolean)
+
+      setPoints(pts)
+    } catch (err) {
+      console.error('Failed to reload map data:', err)
+    }
+  }
+
   return (
-    <main>
-      <Navbar
-        searchQuery={searchQuery}
-        onSearchChange={(e) => setSearchQuery(e.target.value)}
-        filters={filters}
-        onFilterChange={setFilters}
-      />
-
-      <div className="posts-grid">
-        {filteredListings.length > 0 ? (
-          filteredListings.map((listing) => (
-            <Post
-              key={listing._id}
-              id={listing._id}
-              title={listing.title}
-              description={listing.description}
-              imageUrls={getListingImageUrls(listing)}
-              location={listing.meetup_location}
-              transactionType={listing.transaction_type}
-              price={listing.price}
-              owner={listing.owner}
-            />
-          ))
-        ) : (
-          <p>No listings available yet. Create one to get started!</p>
-        )}
+    <main className="map-page">
+      <Navbar />
+      <div className="map-body">
+        <aside className="map-sidebar">
+          <div className="map-sidebar-header">
+            <h3>
+              {selectedState ? `${selectedState.label}` : 'All Listings'}
+            </h3>
+            <p>
+              {sidebarListings.length} listing
+              {sidebarListings.length !== 1 ? 's' : ''}
+            </p>
+            {selectedState && (
+              <button type="button" onClick={() => setSelectedState(null)}>
+                Show all
+              </button>
+            )}
+          </div>
+          <div className="map-sidebar-listings">
+            {sidebarListings.length > 0 ? (
+              sidebarListings.map((listing) => (
+                <MapListingCard key={listing._id} listing={listing} />
+              ))
+            ) : (
+              <p style={{ padding: '12px', color: '#94a3b8', fontSize: '0.875rem' }}>
+                No listings in this area.
+              </p>
+            )}
+          </div>
+        </aside>
+        <MapVisualizer
+          points={points}
+          selectedState={selectedState}
+          onStateClick={handleStateClick}
+        />
       </div>
-
-      <button
-        type="button"
-        className="floating-help-button"
-        onClick={() => setIsHelpOpen(true)}
-        aria-label="Open icon guide"
-        title="Transaction types"
-      >
-        ?
-      </button>
 
       <button
         className="floating-add-button"
@@ -163,12 +294,10 @@ function Home() {
       <CreateListing
         isOpen={isCreateListingOpen}
         onClose={() => setIsCreateListingOpen(false)}
-        onSuccess={fetchListings}
+        onSuccess={handleListingCreated}
         isLoggedIn={authState.isLoggedIn}
         currentUserIdentifier={authState.username || authState.email}
       />
-
-      <PostIconsHelp isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </main>
   )
 }

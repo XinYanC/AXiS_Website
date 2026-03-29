@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMap, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../styles/map.css'
@@ -10,11 +10,25 @@ function FlyTo({ center }) {
   return null
 }
 
-function makeIcon(label, active) {
+// Create a custom dropper icon with listing count
+function makeDropperIcon(count, active) {
+  const hasListings = count > 0
+  const fillColor = hasListings ? (active ? '#3b82f6' : '#ef4444') : '#cbd5e1'
+  
   return L.divIcon({
-    className: '',
-    html: `<div class="map-marker-bubble${active ? ' active' : ''}">${label}</div>`,
-    iconAnchor: [0, 0],
+    className: 'location-dropper-marker',
+    html: `
+      <div class="dropper-icon${active ? ' active' : ''}${!hasListings ? ' disabled' : ''}">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2C14.48 2 10 6.48 10 12C10 19.59 20 35 20 35S30 19.59 30 12C30 6.48 25.52 2 20 2Z" fill="${fillColor}" stroke="white" stroke-width="1.5"/>
+          <circle cx="20" cy="12" r="3.5" fill="white"/>
+        </svg>
+        ${hasListings ? `<span class="dropper-label">${count}</span>` : '<span class="dropper-label">0</span>'}
+      </div>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
   })
 }
 
@@ -37,12 +51,16 @@ function MapVisualizer({ points, selectedState, onStateClick }) {
         <Marker
           key={point.label}
           position={[point.lat, point.lng]}
-          icon={makeIcon(
-            point.count > 0 ? `${point.count}` : point.code,
-            selectedState?.label === point.label
-          )}
+          icon={makeDropperIcon(point.count, selectedState?.label === point.label)}
           eventHandlers={{ click: () => onStateClick(point) }}
-        />
+        >
+          <Popup>
+            <div className="map-popup">
+              <p className="popup-state-name">{point.label}</p>
+              <p className="popup-count">{point.count} listing{point.count !== 1 ? 's' : ''}</p>
+            </div>
+          </Popup>
+        </Marker>
       ))}
     </MapContainer>
   )
