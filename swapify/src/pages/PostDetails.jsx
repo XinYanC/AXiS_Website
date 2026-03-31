@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { readListingById, readUsers, updateListing, updateUser } from '../api'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -131,6 +131,7 @@ const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
 
 function PostDetails() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [listing, setListing] = useState(null)
   const [seller, setSeller] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -315,12 +316,21 @@ function PostDetails() {
 
   // Button text based on transaction type
   const getBuyButtonText = () => {
-    if (isOwnedByCurrentUser) return 'Edit post'
+    if (isOwnedByCurrentUser) return isSold ? 'Sold' : 'Mark as Sold'
     if (isSold) return 'Sold'
-    const t = transactionLabel.toLowerCase()
-    if (t.includes('sell')) return 'Buy'
-    if (t.includes('free')) return 'Claim'
-    return 'Continue'
+    return 'View Seller'
+  }
+
+  const handleMarkAsSold = async () => {
+    if (!isOwnedByCurrentUser || !listing?._id) return
+    
+    try {
+      await updateListing(String(listing._id).trim(), { status: 'sold' })
+      setListing((prev) => (prev ? { ...prev, status: 'sold' } : null))
+    } catch (err) {
+      console.error('Error marking post as sold:', err)
+      setError('Failed to mark post as sold')
+    }
   }
 
   const priceLabel = useMemo(() => {
@@ -411,9 +421,23 @@ function PostDetails() {
     setImageErrors((prev) => ({ ...prev, [currentImageIndex]: true }))
   }
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value)
+  }
+
+  const handleSearchSubmit = (e) => {
+    if (searchQuery.trim()) {
+      navigate(`/grid?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
   return (
     <main className="post-details-page">
-      <Navbar searchQuery={searchQuery} onSearchChange={(e) => setSearchQuery(e.target.value)} />
+      <Navbar 
+        searchQuery={searchQuery} 
+        onSearchChange={handleSearchChange}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
       <div className="post-details-container">
         {loading ? (
@@ -525,18 +549,28 @@ function PostDetails() {
               </section>
 
               <div className="post-details-action-buttons">
-                <Link
-                  to={isOwnedByCurrentUser || isSold ? '#' : sellerProfilePath}
-                  className="post-buy-button"
-                  disabled={isSold}
-                  style={isSold ? { pointerEvents: 'none', opacity: 0.7 } : {}}
-                >
-                  {getBuyButtonText()}
-                </Link>
-                {!isOwnedByCurrentUser ? (
-                  <Link to={messageSellerPath} className="post-message-button">
-                    Message Seller
+                {isOwnedByCurrentUser ? (
+                  <button
+                    type="button"
+                    onClick={handleMarkAsSold}
+                    className="post-buy-button"
+                    disabled={isSold}
+                    style={isSold ? { opacity: 0.7, cursor: 'default' } : {}}
+                  >
+                    {getBuyButtonText()}
+                  </button>
+                ) : (
+                  <Link to={sellerProfilePath} className="post-buy-button">
+                    View Seller
                   </Link>
+                )}
+                {!isOwnedByCurrentUser && seller?.email ? (
+                  <a
+                    href={`mailto:${encodeURIComponent(seller.email)}`}
+                    className="post-message-button"
+                  >
+                    Message Seller
+                  </a>
                 ) : null}
               </div>
             </div>

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ProfileAvatar from './ProfileAvatar';
 import { normalizeImageList } from '../utils/images';
 import { readUsers, updateListing, updateUser } from '../api';
 import '../styles/post.css';
@@ -211,9 +210,7 @@ const Post = ({
     imageUrl,
     location,
     price = 0,
-    transactionType = 'sell',
-    owner,
-    sellerRating = 4.8
+    transactionType = 'sell'
 }) => {
     const [liked, setLiked] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -311,8 +308,6 @@ const Post = ({
         return raw.charAt(0).toUpperCase() + raw.slice(1).replace('-', ' ')
     }
 
-    const displayOwner = owner || 'Unknown User';
-
     const processPendingLikeSync = useCallback(async () => {
         if (isSyncingRef.current || !id) {
             return;
@@ -393,13 +388,6 @@ const Post = ({
         }
     };
 
-    const handleSellerClick = (e) => {
-        e.stopPropagation();
-        if (owner) {
-            navigate(`/profile/${encodeURIComponent(owner)}`);
-        }
-    };
-
     const handleImageError = () => {
         setImageErrors((prev) => ({ ...prev, [currentImageIndex]: true }));
     };
@@ -425,18 +413,6 @@ const Post = ({
         }
 
         setCurrentImageIndex((prev) => (prev + 1) % resolvedImageUrls.length);
-    };
-
-    const getTransactionIcon = (type) => {
-        switch (String(type || '').toLowerCase()) {
-            case 'free':
-            case 'donation':
-                return <DonationIcon />;
-            case 'sell':
-                return <SellIcon />;
-            default:
-                return <SellIcon />;
-        }
     };
 
     if (!title) {
@@ -512,23 +488,6 @@ const Post = ({
                 >
                     <HeartIcon />
                 </button>
-            </div>
-
-            <div className="post-seller" onClick={handleSellerClick}>
-                <div className="seller-info">
-                    <ProfileAvatar value={displayOwner} className="seller-avatar" />
-                    <div className="seller-details">
-                        <span className="seller-name">{displayOwner}</span>
-                        <span className="seller-rating">
-                            <span className="star-icon">★</span>
-                            {sellerRating}
-                        </span>
-                    </div>
-                </div>
-
-                <div className={`transaction-icon ${transactionType}`}>
-                    {getTransactionIcon(transactionType)}
-                </div>
             </div>
         </div>
     );

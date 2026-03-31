@@ -46,7 +46,6 @@ function MapListingCard({ listing }) {
         <p className="map-listing-card-title">{listing.title}</p>
         <p className="map-listing-card-location">{listing.meetup_location}</p>
         <p className="map-listing-card-price">{formattedPrice}</p>
-        <p className="map-listing-card-owner">{listing.owner || 'Unknown'}</p>
       </div>
     </Link>
   )

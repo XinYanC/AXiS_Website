@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { readListings, searchListings } from '../api/listings'
 import Navbar from '../components/Navbar'
 import Post from '../components/post'
@@ -21,10 +22,11 @@ const getAuthState = () => {
 }
 
 function Grid() {
+  const [searchParams] = useSearchParams()
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [listings, setListings] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [authState, setAuthState] = useState(getAuthState)
   const [filters, setFilters] = useState({ location: '', price: '', transactionType: '' })
 
