@@ -1,7 +1,7 @@
 .map-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 60px);
+  height: 100vh;
   background: #f8fafc;
 }
 
@@ -64,6 +64,13 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.map-sidebar-listings .no-listings {
+  padding: 12px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0;
 }
 
 /* ── Sidebar listing card ───────────────────────────── */

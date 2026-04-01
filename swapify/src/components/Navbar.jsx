@@ -4,7 +4,7 @@ import FullLogo from '../assets/FullLogo.PNG'
 import ProfileAvatar from './ProfileAvatar'
 import FilterDropdown from './FilterDropdown'
 import './FilterDropdown.css'
-import { FiSliders } from 'react-icons/fi'
+import { FiSliders, FiGrid, FiMap, FiHeart } from 'react-icons/fi'
 
 const getAuthState = () => {
   if (typeof window === 'undefined') {
@@ -78,7 +78,6 @@ function Navbar({
   const savedItemsPath = authState.username
     ? `/saved-items/${encodeURIComponent(profileIdentifier)}`
     : '/login'
-  const messagesPath = authState.isLoggedIn ? '/messages' : '/login'
 
 
 
@@ -133,16 +132,13 @@ function Navbar({
       </div>
 
       <div className="main-nav-right">
-        <Link to={location.pathname === '/grid' ? '/' : '/grid'} className="nav-map-link">
-          <h2>{location.pathname === '/grid' ? 'Map' : 'Grid'}</h2>
+        <Link to={location.pathname === '/grid' ? '/' : '/grid'} className="nav-map-link" aria-label={location.pathname === '/grid' ? 'Map' : 'Grid'} title={location.pathname === '/grid' ? 'Map' : 'Grid'}>
+          {location.pathname === '/grid' ? <FiMap size={24} /> : <FiGrid size={24} />}
         </Link>
         {authState.isLoggedIn ? (
           <>
-            <Link to={savedItemsPath} className="nav-saved-items-link">
-              <h2>Saved Items</h2>
-            </Link>
-            <Link to={messagesPath} className="nav-messages-link">
-              <h2>Messages</h2>
+            <Link to={savedItemsPath} className="nav-saved-items-link" aria-label="Saved Items" title="Saved Items">
+              <FiHeart size={24} />
             </Link>
             <Link to={profilePath} className="nav-profile-link" aria-label="Profile">
               <ProfileAvatar value={profileIdentifier} className="nav-profile-avatar" />

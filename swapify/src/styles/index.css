@@ -93,6 +93,15 @@
   text-decoration: none;
 }
 
+.nav-map-link,
+.nav-saved-items-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+}
+
 .nav-profile-avatar {
   display: inline-flex;
   align-items: center;

@@ -1,60 +1,104 @@
-.saved-items-title {
-    margin-top: 24px;
-    font-size: 2rem;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-    width: fit-content;
-}
-
 .saved-items-page {
     min-height: 100vh;
+    background: #f8fafc;
 }
 
 .saved-items-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 8px 16px 48px;
+    padding: 24px 20px 48px;
+    padding-top: 80px;
+}
+
+.saved-items-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+    letter-spacing: -0.5px;
 }
 
 .saved-items-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 16px;
-    margin-top: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    margin-top: 24px;
 }
 
 .saved-items-state {
-    margin: 20px auto;
+    margin: 40px auto;
     text-align: center;
     color: #64748b;
-    font-size: 0.95rem;
+    font-size: 1.05rem;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    max-width: 500px;
 }
 
 .saved-items-state.error {
-    color: #b91c1c;
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fecaca;
 }
 
 @media (max-width: 1200px) {
-    .saved-items-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 900px) {
     .saved-items-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
     .saved-items-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
+@media (max-width: 700px) {
+    .saved-items-container {
+        padding: 24px 16px 56px;
+        padding-top: 90px;
+    }
+
+    .saved-items-title {
+        font-size: 1.8rem;
+        margin-bottom: 24px;
+    }
+
+    .saved-items-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .saved-items-state {
+        margin: 32px auto;
+        padding: 32px 16px;
+        font-size: 0.95rem;
+    }
+}
+
 @media (max-width: 480px) {
+    .saved-items-container {
+        padding: 16px 12px 48px;
+        padding-top: 80px;
+    }
+
+    .saved-items-title {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
     .saved-items-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .saved-items-state {
+        margin: 24px auto;
+        padding: 24px 12px;
+        font-size: 0.9rem;
     }
 }

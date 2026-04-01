@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authLogin, readUsers } from '../api'
 import '../styles/login.css'
 import FullLogo from '../assets/FullLogo.PNG'
@@ -10,6 +10,11 @@ const Login = () => {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
+    const location = useLocation()
+
+    // Check if redirected from attempting to like or message
+    const showSaveItemsMessage = location.state?.fromLike === true
+    const showMessageMessage = location.state?.fromMessage === true
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -85,6 +90,12 @@ const Login = () => {
                 <button type="submit" disabled={loading}>{loading ? 'Logging in…' : 'Login'}</button>
             </form>
             <p>Don't have an account? <Link to="/register" className="register-link">Register</Link></p>
+            {showSaveItemsMessage && (
+                <p className="login-info-message">Please login or register to save items</p>
+            )}
+            {showMessageMessage && (
+                <p className="login-info-message">Please login or register to message sellers</p>
+            )}
         </div>
     )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import CitySearchBar from './CitySearchBar'
 import './FilterDropdown.css'
 
 const transactionTypes = [
@@ -25,12 +26,10 @@ const FilterDropdown = ({ filters, onChange, onClose }) => {
       <div className="filter-dropdown-content">
         <label>
           Location:
-          <input
-            type="text"
-            name="location"
+          <CitySearchBar
             value={localFilters.location || ''}
-            onChange={handleChange}
-            placeholder="Enter city, state, or country"
+            onChange={(value) => setLocalFilters((prev) => ({ ...prev, location: value }))}
+            onCitySelect={(cityName) => setLocalFilters((prev) => ({ ...prev, location: cityName }))}
           />
         </label>
         <label>

@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Post from '../components/post'; // Your existing Post component
+import Post from '../components/post';
 import ProfileAvatar from '../components/ProfileAvatar';
 import { readUsers } from '../api/users';
 import { readListingsByUser } from '../api/listings';
 import '../styles/profile.css';
+
+// Memoize Post component to prevent unnecessary re-renders
+const MemoizedPost = React.memo(Post);
 
 // SVG Icons
 const LocationIcon = () => (
@@ -31,26 +34,44 @@ const VerifiedIcon = () => (
     </svg>
 );
 
+const normalizeUsername = (value) =>
+    String(value || '')
+        .trim()
+        .replace(/^@+/, '')
+        .toLowerCase();
+
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
 const Profile = () => {
     const { username } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [listings, setListings] = useState([]);
-    const [activeTab, setActiveTab] = useState('active'); // 'active' or 'sold'
+    const [activeTab, setActiveTab] = useState('active');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const normalizeUsername = (value) =>
-        String(value || '')
-            .trim()
-            .replace(/^@+/, '')
-            .toLowerCase();
+    const viewerIdentity = useMemo(() => ({
+        username: normalizeUsername(localStorage.getItem('swapify.username')),
+        email: normalizeEmail(localStorage.getItem('swapify.email')),
+    }), []);
 
-    const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+    // Memoize filtered listings to prevent unnecessary recalculations
+    const filteredListings = useMemo(
+        () => listings.filter(item =>
+            activeTab === 'active' ? item.status !== 'sold' : item.status === 'sold'
+        ),
+        [listings, activeTab]
+    );
 
-    const viewerUsername = normalizeUsername(localStorage.getItem('swapify.username'));
-    const viewerEmail = normalizeEmail(localStorage.getItem('swapify.email'));
+    const isOwnProfile = useMemo(
+        () => Boolean(
+            (viewerIdentity.username && viewerIdentity.username === normalizeUsername(user?.username)) ||
+            (viewerIdentity.email && viewerIdentity.email === normalizeEmail(user?.email))
+        ),
+        [user, viewerIdentity]
+    );
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -151,17 +172,12 @@ const Profile = () => {
         fetchUserData();
     }, [username]);
 
-    // Filter listings based on active tab
-    const filteredListings = listings.filter(item =>
-        activeTab === 'active' ? item.status !== 'sold' : item.status === 'sold'
-    );
-
-    const handleLogout = () => {
+    const handleLogout = useCallback(() => {
         localStorage.removeItem('swapify.authenticated');
         localStorage.removeItem('swapify.username');
         localStorage.removeItem('swapify.email');
         navigate('/login', { replace: true });
-    };
+    }, [navigate]);
 
     if (loading) {
         return (
@@ -195,11 +211,6 @@ const Profile = () => {
             </>
         );
     }
-
-    const isOwnProfile = Boolean(
-        (viewerUsername && viewerUsername === normalizeUsername(user.username)) ||
-        (viewerEmail && viewerEmail === normalizeEmail(user.email))
-    );
 
     const profileMessagePath = `/messages?seller=${encodeURIComponent(user.name || user.username)}&profile=${encodeURIComponent(user.username || '')}`;
 
@@ -303,7 +314,7 @@ const Profile = () => {
                                         <span>SOLD</span>
                                     </div>
                                 )}
-                                <Post
+                                <MemoizedPost
                                     id={listing._id}
                                     title={listing.title}
                                     description={listing.description}

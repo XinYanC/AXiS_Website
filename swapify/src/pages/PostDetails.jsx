@@ -296,6 +296,8 @@ function PostDetails() {
     const viewer = getViewerIdentity()
     const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
     if (!viewerKey) {
+      // Redirect to login if not logged in
+      navigate('/login', { state: { fromLike: true } })
       return
     }
 
@@ -304,7 +306,7 @@ function PostDetails() {
     setLiked(nextLiked)
     pendingLikedRef.current = nextLiked
     void processPendingLikeSync()
-  }, [liked, processPendingLikeSync])
+  }, [liked, processPendingLikeSync, navigate])
 
   const transactionLabel = useMemo(() => {
     if (!listing?.transaction_type) return 'Not specified'
@@ -331,6 +333,21 @@ function PostDetails() {
       console.error('Error marking post as sold:', err)
       setError('Failed to mark post as sold')
     }
+  }
+
+  const handleMessageSeller = (e) => {
+    e.preventDefault()
+    
+    const viewer = getViewerIdentity()
+    const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
+    if (!viewerKey) {
+      // Redirect to login if not logged in
+      navigate('/login', { state: { fromMessage: true } })
+      return
+    }
+
+    // If logged in, navigate to messages
+    navigate(messageSellerPath)
   }
 
   const priceLabel = useMemo(() => {
@@ -565,12 +582,12 @@ function PostDetails() {
                   </Link>
                 )}
                 {!isOwnedByCurrentUser && seller?.email ? (
-                  <a
-                    href={`mailto:${encodeURIComponent(seller.email)}`}
+                  <button
+                    onClick={handleMessageSeller}
                     className="post-message-button"
                   >
                     Message Seller
-                  </a>
+                  </button>
                 ) : null}
               </div>
             </div>
