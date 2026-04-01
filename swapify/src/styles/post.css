@@ -20,6 +20,7 @@
 
 /* Image container */
 .post-image-container {
+    position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     margin-bottom: 12px;
@@ -132,10 +133,6 @@
     z-index: 2;
 }
 
-.post-price-tag {
-    display: none;
-}
-
 .post-actions-row {
     display: flex;
     align-items: center;
@@ -220,16 +217,6 @@
 
     .post-title {
         font-size: 0.95rem;
-    }
-
-    .transaction-icon {
-        width: 32px;
-        height: 32px;
-    }
-
-    .transaction-icon svg {
-        width: 16px;
-        height: 16px;
     }
 }
 

@@ -39,6 +39,6 @@ describe('cities API', () => {
   it('searchCities encodes the query and calls apiGet', async () => {
     apiGet.mockResolvedValue([])
     await searchCities('New York')
-    expect(apiGet).toHaveBeenCalledWith('/cities/search?query=New%20York')
+    expect(apiGet).toHaveBeenCalledWith('/cities/search?q=New%20York')
   })
 })

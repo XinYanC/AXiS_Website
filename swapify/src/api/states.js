@@ -9,4 +9,4 @@ export const deleteState = (payload) =>
   })
 export const readStates = () => apiGet('/states/read')
 export const searchStates = (query) =>
-  apiGet(`/states/search?query=${encodeURIComponent(query)}`)
+  apiGet(`/states/search?q=${encodeURIComponent(query)}`)

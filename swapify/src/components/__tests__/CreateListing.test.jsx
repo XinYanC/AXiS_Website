@@ -1,8 +1,18 @@
+import { useLayoutEffect } from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import CreateListing from '../CreateListing'
 import { createListing, uploadListingImage } from '../../api'
+
+vi.mock('../LocationDropdown', () => ({
+  default: function MockLocationDropdown({ onSelectionChange }) {
+    useLayoutEffect(() => {
+      onSelectionChange?.({ cityName: 'NYU Bobst' })
+    }, [onSelectionChange])
+    return <div data-testid="mock-location-dropdown" />
+  },
+}))
 
 vi.mock('../../api', () => ({
   createListing: vi.fn(),
@@ -72,10 +82,11 @@ describe('CreateListing', () => {
 
     fireEvent.change(screen.getByPlaceholderText('Title *'), { target: { value: 'Desk Lamp' } })
     fireEvent.change(screen.getByPlaceholderText('Description *'), { target: { value: 'Like new.' } })
-    fireEvent.change(screen.getByPlaceholderText('Meetup Location *'), { target: { value: 'NYU Bobst' } })
     fireEvent.change(screen.getByPlaceholderText('Price *'), { target: { value: '12.99' } })
 
-    fireEvent.click(screen.getByRole('button', { name: /create listing/i }))
+    fireEvent.submit(
+      screen.getByRole('button', { name: /create listing/i }).closest('form'),
+    )
 
     await waitFor(() => {
       expect(createListing).toHaveBeenCalledWith(

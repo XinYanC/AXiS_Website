@@ -1,15 +1,36 @@
-import { useState } from 'react'
-import CitySearchBar from './CitySearchBar'
-import './FilterDropdown.css'
+import { useEffect, useState } from 'react'
+import LocationDropdown from './LocationDropdown'
+import { getSystemDropdownForm } from '../api'
+import '../styles/FilterDropdown.css'
 
-const transactionTypes = [
-  { value: '', label: 'Any' },
-  { value: 'sell', label: 'Sell' },
-  { value: 'free', label: 'Free' },
-]
+const FLD_NM = 'fld_nm'
 
 const FilterDropdown = ({ filters, onChange, onClose }) => {
   const [localFilters, setLocalFilters] = useState(filters)
+  const [transactionTypes, setTransactionTypes] = useState([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getSystemDropdownForm()
+        const form = data.form || []
+        const txField = form.find((f) => f[FLD_NM] === 'transaction_type')
+        const choices = txField?.choices
+        if (Array.isArray(choices) && choices.length > 0) {
+          setTransactionTypes([
+            { value: '', label: 'Any' },
+            ...choices.map((c) => ({
+              value: c,
+              label: String(c).charAt(0).toUpperCase() + String(c).slice(1),
+            })),
+          ])
+        }
+      } catch {
+        setTransactionTypes([])
+      }
+    }
+    load()
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -24,14 +45,15 @@ const FilterDropdown = ({ filters, onChange, onClose }) => {
   return (
     <div className="filter-dropdown">
       <div className="filter-dropdown-content">
-        <label>
-          Location:
-          <CitySearchBar
-            value={localFilters.location || ''}
-            onChange={(value) => setLocalFilters((prev) => ({ ...prev, location: value }))}
-            onCitySelect={(cityName) => setLocalFilters((prev) => ({ ...prev, location: cityName }))}
+        <div className="filter-location-field">
+          <span className="filter-location-label">Location</span>
+          <LocationDropdown
+            legend=""
+            onSelectionChange={({ cityName }) =>
+              setLocalFilters((prev) => ({ ...prev, location: cityName }))
+            }
           />
-        </label>
+        </div>
         <label>
           Price (max):
           <input

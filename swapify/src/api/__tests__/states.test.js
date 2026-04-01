@@ -39,6 +39,6 @@ describe('states API', () => {
   it('searchStates encodes the query and calls apiGet', async () => {
     apiGet.mockResolvedValue([])
     await searchStates('New Mexico')
-    expect(apiGet).toHaveBeenCalledWith('/states/search?query=New%20Mexico')
+    expect(apiGet).toHaveBeenCalledWith('/states/search?q=New%20Mexico')
   })
 })

@@ -60,12 +60,57 @@ exports[`Register page > matches snapshot 1`] = `
         type="text"
         value=""
       />
-      <input
-        placeholder="Location (e.g., NY,USA)"
-        required=""
-        type="text"
-        value=""
-      />
+      <fieldset
+        aria-label="Location"
+        class="location-dropdowns"
+        disabled=""
+      >
+        <legend
+          class="location-dropdowns-legend"
+        >
+          Location
+          <span
+            class="location-dropdowns-loading"
+          >
+             Loading…
+          </span>
+        </legend>
+        <select
+          aria-label="Country"
+          class="location-dropdowns-select"
+          required=""
+        >
+          <option
+            value=""
+          >
+            Country
+          </option>
+        </select>
+        <select
+          aria-label="State"
+          class="location-dropdowns-select"
+          disabled=""
+          required=""
+        >
+          <option
+            value=""
+          >
+            State
+          </option>
+        </select>
+        <select
+          aria-label="City"
+          class="location-dropdowns-select"
+          disabled=""
+          required=""
+        >
+          <option
+            value=""
+          >
+            City
+          </option>
+        </select>
+      </fieldset>
       <button
         type="submit"
       >
@@ -73,7 +118,8 @@ exports[`Register page > matches snapshot 1`] = `
       </button>
     </form>
     <p>
-      Already have an account? 
+      Already have an account?
+       
       <a
         class="login-link"
         data-discover="true"

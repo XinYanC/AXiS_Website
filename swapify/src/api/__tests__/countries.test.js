@@ -45,6 +45,6 @@ describe('countries API', () => {
   it('searchCountries encodes the query and calls apiGet', async () => {
     apiGet.mockResolvedValue([])
     await searchCountries('United States')
-    expect(apiGet).toHaveBeenCalledWith('/countries/search?query=United%20States')
+    expect(apiGet).toHaveBeenCalledWith('/countries/search?q=United%20States')
   })
 })

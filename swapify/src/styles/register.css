@@ -81,12 +81,6 @@ body:has(.register-container) {
     font-size: 0.9rem;
 }
 
-.success-message {
-    color: #2e7d32;
-    margin: 10px 0;
-    font-size: 0.9rem;
-}
-
 .login-link {
     color: #000;
     text-decoration: underline;

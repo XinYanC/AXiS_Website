@@ -9,4 +9,4 @@ export const deleteCountry = (payload) =>
   })
 export const readCountries = () => apiGet('/countries/read')
 export const searchCountries = (query) =>
-  apiGet(`/countries/search?query=${encodeURIComponent(query)}`)
+  apiGet(`/countries/search?q=${encodeURIComponent(query)}`)

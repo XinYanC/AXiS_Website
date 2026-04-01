@@ -7,6 +7,8 @@ import { readListingById, readUsers } from '../../api'
 vi.mock('../../api', () => ({
   readListingById: vi.fn(),
   readUsers: vi.fn(),
+  updateListing: vi.fn().mockResolvedValue({}),
+  updateUser: vi.fn().mockResolvedValue({}),
 }))
 
 vi.mock('../../components/Navbar', () => ({
@@ -15,7 +17,7 @@ vi.mock('../../components/Navbar', () => ({
 
 describe('PostDetails', () => {
   const listing = {
-    id: 'listing-1',
+    _id: 'listing-1',
     title: 'Desk Lamp',
     owner: 'alice',
     owner_email: 'alice@example.com',
@@ -30,14 +32,16 @@ describe('PostDetails', () => {
     localStorage.clear()
     vi.clearAllMocks()
     readListingById.mockResolvedValue(listing)
-    readUsers.mockResolvedValue([
-      {
-        username: 'alice',
-        email: 'alice@example.com',
-        name: 'Alice',
-        rating: 4.8,
+    readUsers.mockResolvedValue({
+      User: {
+        alice: {
+          username: 'alice',
+          email: 'alice@example.com',
+          name: 'Alice',
+          rating: 4.8,
+        },
       },
-    ])
+    })
   })
 
   const renderPostDetails = () =>
@@ -49,23 +53,27 @@ describe('PostDetails', () => {
       </MemoryRouter>,
     )
 
-  it('shows Edit post when the listing belongs to the logged-in user', async () => {
+  it('shows Mark as Sold when the listing belongs to the logged-in user', async () => {
     localStorage.setItem('swapify.authenticated', 'true')
     localStorage.setItem('swapify.username', 'alice')
     localStorage.setItem('swapify.email', 'alice@example.com')
 
     renderPostDetails()
 
-    expect(await screen.findByRole('link', { name: /edit post/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: /mark as sold/i }),
+    ).toBeInTheDocument()
   })
 
-  it('shows Buy when the listing belongs to another user', async () => {
+  it('shows View Seller when the listing belongs to another user', async () => {
     localStorage.setItem('swapify.authenticated', 'true')
     localStorage.setItem('swapify.username', 'bob')
     localStorage.setItem('swapify.email', 'bob@example.com')
 
     renderPostDetails()
 
-    expect(await screen.findByRole('link', { name: /^buy$/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('link', { name: /view seller/i }),
+    ).toBeInTheDocument()
   })
 })

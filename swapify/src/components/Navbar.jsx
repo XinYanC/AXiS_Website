@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import FullLogo from '../assets/FullLogo.PNG'
 import ProfileAvatar from './ProfileAvatar'
 import FilterDropdown from './FilterDropdown'
-import './FilterDropdown.css'
 import { FiSliders, FiGrid, FiMap, FiHeart } from 'react-icons/fi'
 
 const getAuthState = () => {

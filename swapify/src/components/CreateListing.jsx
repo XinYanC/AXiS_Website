@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createListing, uploadListingImage } from '../api'
 import { DonationIcon, SellIcon } from './post'
-import CitySearchBar from './CitySearchBar'
+import LocationDropdown from './LocationDropdown'
 import '../styles/createListing.css'
 
 const getStoredAuthState = () => {
@@ -30,7 +30,6 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [transactionType, setTransactionType] = useState('sell')
-    const [meetupCityDisplay, setMeetupCityDisplay] = useState('')
     const [meetupCity, setMeetupCity] = useState('')
     const [price, setPrice] = useState('')
     const [uploadedImageUrls, setUploadedImageUrls] = useState([])
@@ -181,7 +180,6 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
         setTitle('')
         setDescription('')
         setTransactionType('sell')
-        setMeetupCityDisplay('')
         setMeetupCity('')
         setPrice('')
         setUploadedImageUrls([])
@@ -224,18 +222,17 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
 
             await createListing(payload)
             setSuccess(true)
-            
+
             // Call onSuccess callback if provided
             if (onSuccess) {
                 onSuccess()
             }
-            
+
             // Reset form after 1.5 seconds and close
             setTimeout(() => {
                 setTitle('')
                 setDescription('')
                 setTransactionType('sell')
-                setMeetupCityDisplay('')
                 setMeetupCity('')
                 setPrice('')
                 setUploadedImageUrls([])
@@ -268,119 +265,119 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                         </Link>
                     </div>
                 ) : (
-                <>
-                
-                <form onSubmit={handleSubmit} className="create-listing-form">
-                    <input
-                        type="text"
-                        placeholder="Title *"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        required
-                    />
-                    
-                    <textarea
-                        placeholder="Description *"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                        rows={4}
-                    />
+                    <>
 
-                    <CitySearchBar
-                        value={meetupCityDisplay}
-                        onChange={setMeetupCityDisplay}
-                        onCitySelect={setMeetupCity}
-                    />
+                        <form onSubmit={handleSubmit} className="create-listing-form">
+                            <input
+                                type="text"
+                                placeholder="Title *"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                required
+                            />
 
-                    <div className="image-upload-section">
-                        <label htmlFor="listing-image-upload" className="image-upload-label">
-                            Upload Images (optional)
-                        </label>
-                        <input
-                            id="listing-image-upload"
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleImageUpload}
-                            disabled={isLoading || isUploadingImages}
-                        />
-                        <p className="image-upload-hint">Images will be automatically center-cropped to a square.</p>
+                            <textarea
+                                placeholder="Description *"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                required
+                                rows={4}
+                            />
 
-                        {isUploadingImages && (
-                            <p className="image-upload-status">Uploading image(s)...</p>
-                        )}
+                            <LocationDropdown
+                                legend="Meetup Location"
+                                disabled={isLoading || isUploadingImages}
+                                onSelectionChange={({ cityName }) => setMeetupCity(cityName)}
+                            />
 
-                        {uploadedImageUrls.length > 0 && (
-                            <div className="uploaded-image-list">
-                                {uploadedImageUrls.map((url, index) => (
-                                    <div className="uploaded-image-item" key={`${url}-${index}`}>
-                                        <img src={url} alt={`Uploaded listing image ${index + 1}`} />
-                                        <button
-                                            type="button"
-                                            className="remove-uploaded-image-button"
-                                            onClick={() => handleRemoveUploadedImage(index)}
-                                        >
-                                            Remove
-                                        </button>
+                            <div className="image-upload-section">
+                                <label htmlFor="listing-image-upload" className="image-upload-label">
+                                    Upload Images (optional)
+                                </label>
+                                <input
+                                    id="listing-image-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageUpload}
+                                    disabled={isLoading || isUploadingImages}
+                                />
+                                <p className="image-upload-hint">Images will be automatically center-cropped to a square.</p>
+
+                                {isUploadingImages && (
+                                    <p className="image-upload-status">Uploading image(s)...</p>
+                                )}
+
+                                {uploadedImageUrls.length > 0 && (
+                                    <div className="uploaded-image-list">
+                                        {uploadedImageUrls.map((url, index) => (
+                                            <div className="uploaded-image-item" key={`${url}-${index}`}>
+                                                <img src={url} alt={`Uploaded listing image ${index + 1}`} />
+                                                <button
+                                                    type="button"
+                                                    className="remove-uploaded-image-button"
+                                                    onClick={() => handleRemoveUploadedImage(index)}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
+                            </div>
+
+                            <div className="transaction-picker" role="group" aria-label="Transaction Type">
+                                <div className="transaction-button-grid">
+                                    <button
+                                        type="button"
+                                        className={`transaction-option-button free ${transactionType === 'free' ? 'selected' : ''}`}
+                                        onClick={() => handleTransactionTypeSelect('free')}
+                                        aria-pressed={transactionType === 'free'}
+                                    >
+                                        <span className="transaction-option-icon"><DonationIcon /></span>
+                                        <span>Free</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`transaction-option-button sell ${transactionType === 'sell' ? 'selected' : ''}`}
+                                        onClick={() => handleTransactionTypeSelect('sell')}
+                                        aria-pressed={transactionType === 'sell'}
+                                    >
+                                        <span className="transaction-option-icon"><SellIcon /></span>
+                                        <span>Sell</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {(transactionType === 'sell') && (
+                                <input
+                                    type="number"
+                                    placeholder="Price *"
+                                    value={price}
+                                    onChange={(e) => setPrice(e.target.value)}
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                />
+                            )}
+
+                            <button type="submit" disabled={isLoading || isUploadingImages} className="submit-button">
+                                {isLoading ? 'Creating...' : 'Create Listing'}
+                            </button>
+                        </form>
+
+                        {error && (
+                            <div className="error-container">
+                                <p className="error-header">Failed to Create Listing</p>
+                                <p className="error-message">{error}</p>
                             </div>
                         )}
-                    </div>
 
-                    <div className="transaction-picker" role="group" aria-label="Transaction Type">
-                        <div className="transaction-button-grid">
-                            <button
-                                type="button"
-                                className={`transaction-option-button free ${transactionType === 'free' ? 'selected' : ''}`}
-                                onClick={() => handleTransactionTypeSelect('free')}
-                                aria-pressed={transactionType === 'free'}
-                            >
-                                <span className="transaction-option-icon"><DonationIcon /></span>
-                                <span>Free</span>
-                            </button>
-                            <button
-                                type="button"
-                                className={`transaction-option-button sell ${transactionType === 'sell' ? 'selected' : ''}`}
-                                onClick={() => handleTransactionTypeSelect('sell')}
-                                aria-pressed={transactionType === 'sell'}
-                            >
-                                <span className="transaction-option-icon"><SellIcon /></span>
-                                <span>Sell</span>
-                            </button>
-                        </div>
-                    </div>
+                        {success && (
+                            <p className="success-message">Listing created successfully!</p>
+                        )}
 
-                    {(transactionType === 'sell') && (
-                        <input
-                            type="number"
-                            placeholder="Price *"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            step="0.01"
-                            min="0"
-                            required
-                        />
-                    )}
-                    
-                    <button type="submit" disabled={isLoading || isUploadingImages} className="submit-button">
-                        {isLoading ? 'Creating...' : 'Create Listing'}
-                    </button>
-                </form>
-
-                {error && (
-                    <div className="error-container">
-                        <p className="error-header">Failed to Create Listing</p>
-                        <p className="error-message">{error}</p>
-                    </div>
-                )}
-                
-                {success && (
-                    <p className="success-message">Listing created successfully!</p>
-                )}
-
-                </>
+                    </>
                 )}
             </div>
         </div>
