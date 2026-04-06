@@ -9,7 +9,7 @@ export const getSystemDropdownForm = () => apiGet('/system/dropdown-form')
 HATEOAS: option lists for cascading dropdowns.
 - No params: countries
 - country_code: states in that country
-- state_code: cities in that state
+- state_code + country_code: cities in that state
 */
 export const getSystemDropdownOptions = (params = {}) => {
   const search = new URLSearchParams()

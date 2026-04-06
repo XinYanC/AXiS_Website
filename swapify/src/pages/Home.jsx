@@ -1,13 +1,13 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { readStates } from '../api/states'
 import { readCities } from '../api/cities'
 import { readListings } from '../api/listings'
 import Navbar from '../components/Navbar'
 import MapVisualizer from '../components/MapVisualizer'
 import CreateListing from '../components/CreateListing'
-import STATE_COORDS from '../utils/stateCoordinates'
 import { getListingImageUrls } from '../utils/images'
+import { formatGeoLocation } from '../utils/geo'
+import { buildCityMapModel } from '../utils/cityMapData'
 import '../styles/map.css'
 
 const getAuthState = () => {
@@ -22,15 +22,29 @@ const getAuthState = () => {
   }
 }
 
+function parseCities(citiesData) {
+  if (Array.isArray(citiesData)) return citiesData
+  if (citiesData && citiesData.Cities) return Object.values(citiesData.Cities)
+  return []
+}
+
+function parseListings(listingsData) {
+  if (listingsData && listingsData.Listings) {
+    return Object.values(listingsData.Listings)
+  }
+  if (Array.isArray(listingsData)) return listingsData
+  return []
+}
+
 function MapListingCard({ listing }) {
   const images = getListingImageUrls(listing)
   const numericPrice = Number(listing.price)
   const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0
   const formattedPrice = hasPrice
     ? `$${numericPrice.toLocaleString(undefined, {
-        minimumFractionDigits: numericPrice % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-      })}`
+      minimumFractionDigits: numericPrice % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    })}`
     : 'Free'
 
   return (
@@ -44,7 +58,7 @@ function MapListingCard({ listing }) {
       </div>
       <div className="map-listing-card-info">
         <p className="map-listing-card-title">{listing.title}</p>
-        <p className="map-listing-card-location">{listing.meetup_location}</p>
+        <p className="map-listing-card-location">{formatGeoLocation(listing)}</p>
         <p className="map-listing-card-price">{formattedPrice}</p>
       </div>
     </Link>
@@ -54,100 +68,36 @@ function MapListingCard({ listing }) {
 function Home() {
   const [points, setPoints] = useState([])
   const [allListings, setAllListings] = useState([])
-  const [listingsByState, setListingsByState] = useState({})
+  const [listingsByCityKey, setListingsByCityKey] = useState({})
   const [selectedState, setSelectedState] = useState(null)
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [authState, setAuthState] = useState(getAuthState)
 
+  // useCallback to memoize the applyMapData function
+  const applyMapData = useCallback((cities, listings) => {
+    setAllListings(listings)
+    const { points: pts, listingsByCityKey: byKey } = buildCityMapModel(cities, listings)
+    setPoints(pts)
+    setListingsByCityKey(byKey)
+  }, [])
+
   useEffect(() => {
     const load = async () => {
       try {
-        const [statesData, citiesData, listingsData] = await Promise.all([
-          readStates(),
+        const [citiesData, listingsData] = await Promise.all([
           readCities(),
           readListings(),
         ])
-
-        // Parse states
-        let states = []
-        if (Array.isArray(statesData)) {
-          states = statesData
-        } else if (statesData && statesData.States) {
-          states = Object.values(statesData.States)
-        }
-
-        // Parse cities
-        let cities = []
-        if (Array.isArray(citiesData)) {
-          cities = citiesData
-        } else if (citiesData && citiesData.Cities) {
-          cities = Object.values(citiesData.Cities)
-        }
-
-        // Parse listings
-        let listings = []
-        if (listingsData && listingsData.Listings) {
-          listings = Object.values(listingsData.Listings)
-        } else if (Array.isArray(listingsData)) {
-          listings = listingsData
-        }
-        setAllListings(listings)
-
-        // Build city -> state code mapping
-        const cityToState = new Map()
-        for (const city of cities) {
-          const cityName = city.name?.toLowerCase() ?? ''
-          const stateCode = city.state ?? city.state_code ?? ''
-          if (cityName && stateCode) {
-            cityToState.set(cityName, stateCode)
-          }
-        }
-
-        console.log('City to state mapping:', Object.fromEntries(cityToState))
-        console.log('Listings:', listings.map((l) => ({ title: l.title, location: l.meetup_location })))
-
-        // Assign each listing to a state based on city
-        const byState = {}
-        for (const listing of listings) {
-          const listingCity = listing.meetup_location?.toLowerCase() ?? ''
-          const stateCode = cityToState.get(listingCity)
-          
-          if (stateCode) {
-            if (!byState[stateCode]) byState[stateCode] = []
-            byState[stateCode].push(listing)
-          }
-        }
-        setListingsByState(byState)
-
-        console.log('Listings by state:', byState)
-
-        // Build map points for all states
-        const pts = states
-          .map((s) => {
-            const backendCoords =
-              s.latitude != null && s.longitude != null
-                ? [s.latitude, s.longitude]
-                : null
-            const coords = backendCoords ?? STATE_COORDS[s.code]
-            if (!coords) return null
-            return {
-              lat: coords[0],
-              lng: coords[1],
-              label: s.name,
-              code: s.code,
-              count: byState[s.code]?.length ?? 0,
-            }
-          })
-          .filter(Boolean)
-
-        setPoints(pts)
+        const cities = parseCities(citiesData)
+        const listings = parseListings(listingsData)
+        applyMapData(cities, listings)
       } catch (err) {
         console.error('Failed to load map data:', err)
       }
     }
 
     load()
-  }, [])
+  }, [applyMapData])
 
   useEffect(() => {
     const syncAuthState = () => {
@@ -164,95 +114,32 @@ function Home() {
   }, [])
 
   const sidebarListings = useMemo(() => {
-    if (!selectedState) return allListings
-    return listingsByState[selectedState.code] ?? []
-  }, [selectedState, allListings, listingsByState])
+    if (!selectedState?.mapKey) return allListings
+    return listingsByCityKey[selectedState.mapKey] ?? []
+  }, [selectedState, allListings, listingsByCityKey])
 
   const handleStateClick = (point) => {
-    setSelectedState((prev) => (prev?.label === point.label ? null : point))
+    setSelectedState((prev) => (prev?.mapKey === point.mapKey ? null : point))
   }
 
   const handleListingCreated = async () => {
     // Reload the data after a listing is created
     try {
-      const [statesData, citiesData, listingsData] = await Promise.all([
-        readStates(),
+      const [citiesData, listingsData] = await Promise.all([
         readCities(),
         readListings(),
       ])
-
-      // Parse states
-      let states = []
-      if (Array.isArray(statesData)) {
-        states = statesData
-      } else if (statesData && statesData.States) {
-        states = Object.values(statesData.States)
-      }
-
-      // Parse cities
-      let cities = []
-      if (Array.isArray(citiesData)) {
-        cities = citiesData
-      } else if (citiesData && citiesData.Cities) {
-        cities = Object.values(citiesData.Cities)
-      }
-
-      // Parse listings
-      let listings = []
-      if (listingsData && listingsData.Listings) {
-        listings = Object.values(listingsData.Listings)
-      } else if (Array.isArray(listingsData)) {
-        listings = listingsData
-      }
-      setAllListings(listings)
-
-      // Build city -> state code mapping
-      const cityToState = new Map()
-      for (const city of cities) {
-        const cityName = city.name?.toLowerCase() ?? ''
-        const stateCode = city.state ?? city.state_code ?? ''
-        if (cityName && stateCode) {
-          cityToState.set(cityName, stateCode)
-        }
-      }
-
-      // Assign each listing to a state based on city
-      const byState = {}
-      for (const listing of listings) {
-        const listingCity = listing.meetup_location?.toLowerCase() ?? ''
-        const stateCode = cityToState.get(listingCity)
-        
-        if (stateCode) {
-          if (!byState[stateCode]) byState[stateCode] = []
-          byState[stateCode].push(listing)
-        }
-      }
-      setListingsByState(byState)
-
-      // Build map points for ALL states (not just ones with listings)
-      const pts = states
-        .map((s) => {
-          const backendCoords =
-            s.latitude != null && s.longitude != null
-              ? [s.latitude, s.longitude]
-              : null
-          const coords = backendCoords ?? STATE_COORDS[s.code]
-          if (!coords) return null
-          return {
-            lat: coords[0],
-            lng: coords[1],
-            label: s.name,
-            code: s.code,
-            count: byState[s.code]?.length ?? 0,
-          }
-        })
-        .filter(Boolean)
-
-      setPoints(pts)
+      const cities = parseCities(citiesData)
+      const listings = parseListings(listingsData)
+      applyMapData(cities, listings)
     } catch (err) {
       console.error('Failed to reload map data:', err)
     }
   }
+
+  const sidebarTitle = selectedState?.mapKey
+    ? `${selectedState.label}, ${selectedState.subtitle}`
+    : 'All Listings'
 
   return (
     <main className="map-page">
@@ -260,9 +147,7 @@ function Home() {
       <div className="map-body">
         <aside className="map-sidebar">
           <div className="map-sidebar-header">
-            <h3>
-              {selectedState ? `${selectedState.label}` : 'All Listings'}
-            </h3>
+            <h3>{sidebarTitle}</h3>
             <p>
               {sidebarListings.length} listing
               {sidebarListings.length !== 1 ? 's' : ''}

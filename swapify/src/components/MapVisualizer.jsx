@@ -3,10 +3,10 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../styles/map.css'
 
-// Recenter helper — flies to new center when selectedState changes
-function FlyTo({ center }) {
+// Recenter helper — flies to new center when selection changes
+function FlyTo({ center, zoom }) {
   const map = useMap()
-  if (center) map.flyTo(center, 7, { duration: 0.8 })
+  if (center) map.flyTo(center, zoom ?? 7, { duration: 0.8 })
   return null
 }
 
@@ -14,7 +14,7 @@ function FlyTo({ center }) {
 function makeDropperIcon(count, active) {
   const hasListings = count > 0
   const fillColor = hasListings ? (active ? '#3b82f6' : '#ef4444') : '#cbd5e1'
-  
+
   return L.divIcon({
     className: 'location-dropper-marker',
     html: `
@@ -33,6 +33,8 @@ function makeDropperIcon(count, active) {
 }
 
 function MapVisualizer({ points, selectedState, onStateClick }) {
+  const flyZoom = selectedState?.mapKey ? 10 : 7
+
   return (
     <MapContainer
       center={[38, -96]}
@@ -46,18 +48,28 @@ function MapVisualizer({ points, selectedState, onStateClick }) {
         subdomains="abcd"
         maxZoom={19}
       />
-      {selectedState && <FlyTo center={[selectedState.lat, selectedState.lng]} />}
+      {selectedState && (
+        <FlyTo center={[selectedState.lat, selectedState.lng]} zoom={flyZoom} />
+      )}
       {points.map((point) => (
         <Marker
-          key={point.label}
+          key={point.mapKey ?? point.label}
           position={[point.lat, point.lng]}
-          icon={makeDropperIcon(point.count, selectedState?.label === point.label)}
+          icon={makeDropperIcon(
+            point.count,
+            selectedState?.mapKey != null &&
+            selectedState.mapKey === point.mapKey,
+          )}
           eventHandlers={{ click: () => onStateClick(point) }}
         >
           <Popup>
             <div className="map-popup">
-              <p className="popup-state-name">{point.label}</p>
-              <p className="popup-count">{point.count} listing{point.count !== 1 ? 's' : ''}</p>
+              <p className="popup-state-name">
+                {point.subtitle ? `${point.label}, ${point.subtitle}` : point.label}
+              </p>
+              <p className="popup-count">
+                {point.count} listing{point.count !== 1 ? 's' : ''}
+              </p>
             </div>
           </Popup>
         </Marker>

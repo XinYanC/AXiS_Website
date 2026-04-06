@@ -5,6 +5,12 @@ import ProfileAvatar from './ProfileAvatar'
 import FilterDropdown from './FilterDropdown'
 import { FiSliders, FiGrid, FiMap, FiHeart } from 'react-icons/fi'
 
+const DEFAULT_NAV_FILTERS = {
+  city: '',
+  price: '',
+  transactionType: '',
+}
+
 const getAuthState = () => {
   if (typeof window === 'undefined') {
     return {
@@ -31,7 +37,7 @@ function Navbar({
   onSearchSubmit,
   showLogoutButton = false,
   onLogout,
-  filters = {},
+  filters = DEFAULT_NAV_FILTERS,
   onFilterChange,
 }) {
   const location = useLocation()

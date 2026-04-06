@@ -76,7 +76,10 @@ function LocationDropdown({
     const load = async () => {
       setGeoLoading(true)
       try {
-        const data = await getSystemDropdownOptions({ state_code: stateCode })
+        const data = await getSystemDropdownOptions({
+          state_code: stateCode,
+          country_code: countryCode,
+        })
         if (!cancelled) {
           setCities(data.options || [])
         }
@@ -90,7 +93,7 @@ function LocationDropdown({
     return () => {
       cancelled = true
     }
-  }, [stateCode])
+  }, [stateCode, countryCode])
 
   const handleCountryChange = (e) => {
     const v = e.target.value

@@ -13,13 +13,16 @@ const Register = () => {
   const [username, setUsername] = useState('')
   const [age, setAge] = useState('')
   const [bio, setBio] = useState('')
-  const [location, setLocation] = useState('')
+  const [regCity, setRegCity] = useState('')
+  const [regState, setRegState] = useState('')
+  const [regCountry, setRegCountry] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleLocationSelection = ({ cityName, countryCode: cc, stateCode: sc }) => {
-    const parts = [cityName, ...(sc && cc ? [sc, cc] : [])].filter(Boolean)
-    setLocation(parts.join(','))
+    setRegCity(cityName ? String(cityName).trim() : '')
+    setRegState(sc ? String(sc).trim() : '')
+    setRegCountry(cc ? String(cc).trim() : '')
   }
 
   const handleSubmit = async (e) => {
@@ -36,7 +39,9 @@ const Register = () => {
         age: parseInt(age, 10) || 0,
         bio,
         is_verified: false,
-        location,
+        city: regCity,
+        state: regState,
+        country: regCountry,
       }
 
       await createUser(payload)

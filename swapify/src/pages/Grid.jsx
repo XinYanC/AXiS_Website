@@ -6,6 +6,7 @@ import Post from '../components/post'
 import CreateListing from '../components/CreateListing'
 import PostIconsHelp from '../components/PostIconsHelp'
 import { getListingImageUrls } from '../utils/images'
+import { formatGeoLocation } from '../utils/geo'
 import '../styles/createListing.css'
 import '../styles/postIconsHelp.css'
 
@@ -28,7 +29,7 @@ function Grid() {
   const [listings, setListings] = useState([])
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [authState, setAuthState] = useState(getAuthState)
-  const [filters, setFilters] = useState({ location: '', price: '', transactionType: '' })
+  const [filters, setFilters] = useState({ city: '', price: '', transactionType: '' })
 
   const fetchListings = async () => {
     try {
@@ -84,9 +85,9 @@ function Grid() {
   // Filter listings client-side
   const filteredListings = listings.filter((listing) => {
     // Location filter (city, state, or country)
-    const location = String(listing.meetup_location || '').toLowerCase()
-    const filterLocation = String(filters.location || '').toLowerCase()
-    const matchesLocation = !filterLocation || location.includes(filterLocation)
+    const city = String(listing.city || '').toLowerCase()
+    const filterCity = String(filters.city || '').toLowerCase()
+    const matchesCity = !filterCity || city.includes(filterCity)
 
     // Price filter (max price)
     const price = Number(listing.price)
@@ -98,7 +99,7 @@ function Grid() {
     const filterType = String(filters.transactionType || '').toLowerCase()
     const matchesType = !filterType || transactionType === filterType
 
-    return matchesLocation && matchesPrice && matchesType
+    return matchesCity && matchesPrice && matchesType
   })
 
   useEffect(() => {
@@ -133,7 +134,7 @@ function Grid() {
               title={listing.title}
               description={listing.description}
               imageUrls={getListingImageUrls(listing)}
-              location={listing.meetup_location}
+              location={formatGeoLocation(listing)}
               transactionType={listing.transaction_type}
               price={listing.price}
               owner={listing.owner}

@@ -8,7 +8,11 @@ import { createListing, uploadListingImage } from '../../api'
 vi.mock('../LocationDropdown', () => ({
   default: function MockLocationDropdown({ onSelectionChange }) {
     useLayoutEffect(() => {
-      onSelectionChange?.({ cityName: 'NYU Bobst' })
+      onSelectionChange?.({
+        cityName: 'new-york',
+        stateCode: 'NY',
+        countryCode: 'USA',
+      })
     }, [onSelectionChange])
     return <div data-testid="mock-location-dropdown" />
   },
@@ -93,7 +97,9 @@ describe('CreateListing', () => {
         expect.objectContaining({
           title: 'Desk Lamp',
           description: 'Like new.',
-          meetup_location: 'NYU Bobst',
+          city: 'new-york',
+          state: 'NY',
+          country: 'USA',
           owner: 'alice',
           transaction_type: 'sell',
           price: 12.99,

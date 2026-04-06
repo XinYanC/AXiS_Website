@@ -6,6 +6,7 @@ import ProfileAvatar from '../components/ProfileAvatar';
 import { readUsers } from '../api/users';
 import { readListingsByUser } from '../api/listings';
 import '../styles/profile.css';
+import { formatGeoLocation } from '../utils/geo';
 
 // Memoize Post component to prevent unnecessary re-renders
 const MemoizedPost = React.memo(Post);
@@ -144,7 +145,7 @@ const Profile = () => {
                     ...profileUser,
                     name: profileUser.name || displayUsername || username,
                     username: displayUsername,
-                    location: profileUser.location || 'Unknown location',
+                    location: formatGeoLocation(profileUser) || 'Unknown location',
                     memberSince: profileUser.created_at || 'N/A',
                     rating,
                     totalReviews: 0,
@@ -319,7 +320,7 @@ const Profile = () => {
                                     title={listing.title}
                                     description={listing.description}
                                     imageUrls={Array.isArray(listing.images) ? listing.images : []}
-                                    location={listing.meetup_location}
+                                    location={formatGeoLocation(listing)}
                                     transactionType={listing.transaction_type}
                                     price={listing.price}
                                     owner={listing.owner}

@@ -1,12 +1,27 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { readStates } from '../api/states'
+import { readCities } from '../api/cities'
 import { readListings } from '../api/listings'
 import Navbar from '../components/Navbar'
 import MapVisualizer from '../components/MapVisualizer'
-import STATE_COORDS from '../utils/stateCoordinates'
 import { getListingImageUrls } from '../utils/images'
+import { formatGeoLocation } from '../utils/geo'
+import { buildCityMapModel } from '../utils/cityMapData'
 import '../styles/map.css'
+
+function parseCities(citiesData) {
+  if (Array.isArray(citiesData)) return citiesData
+  if (citiesData && citiesData.Cities) return Object.values(citiesData.Cities)
+  return []
+}
+
+function parseListings(listingsData) {
+  if (listingsData && listingsData.Listings) {
+    return Object.values(listingsData.Listings)
+  }
+  if (Array.isArray(listingsData)) return listingsData
+  return []
+}
 
 function MapListingCard({ listing }) {
   const images = getListingImageUrls(listing)
@@ -21,7 +36,7 @@ function MapListingCard({ listing }) {
       )}
       <div className="map-listing-card-info">
         <p className="map-listing-card-title">{listing.title}</p>
-        <p className="map-listing-card-location">{listing.meetup_location}</p>
+        <p className="map-listing-card-location">{formatGeoLocation(listing)}</p>
         <p className="map-listing-card-price">{price}</p>
       </div>
     </Link>
@@ -31,75 +46,23 @@ function MapListingCard({ listing }) {
 function Map() {
   const [points, setPoints] = useState([])
   const [allListings, setAllListings] = useState([])
-  const [listingsByState, setListingsByState] = useState({})
+  const [listingsByCityKey, setListingsByCityKey] = useState({})
   const [selectedState, setSelectedState] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [statesData, listingsData] = await Promise.all([
-          readStates(),
+        const [citiesData, listingsData] = await Promise.all([
+          readCities(),
           readListings(),
         ])
-
-        // Parse states
-        let states = []
-        if (Array.isArray(statesData)) {
-          states = statesData
-        } else if (statesData && statesData.States) {
-          states = Object.values(statesData.States)
-        }
-
-        // Parse listings
-        let listings = []
-        if (listingsData && listingsData.Listings) {
-          listings = Object.values(listingsData.Listings)
-        } else if (Array.isArray(listingsData)) {
-          listings = listingsData
-        }
+        const cities = parseCities(citiesData)
+        const listings = parseListings(listingsData)
         setAllListings(listings)
-
-        // Build state map: code -> state name
-        const stateMap = new Map(states.map((s) => [s.code, s]))
-
-        // Assign each listing to a state
-        const byState = {}
-        for (const listing of listings) {
-          const loc = listing.meetup_location?.toLowerCase() ?? ''
-          for (const [code, state] of stateMap) {
-            if (
-              loc.includes(state.name.toLowerCase()) ||
-              loc.includes(`, ${code.toLowerCase()}`)
-            ) {
-              if (!byState[code]) byState[code] = []
-              byState[code].push(listing)
-              break
-            }
-          }
-        }
-        setListingsByState(byState)
-
-        // Build map points — use backend lat/lng if available, else fall back to hardcoded
-        const pts = states
-          .map((s) => {
-            const backendCoords =
-              s.latitude != null && s.longitude != null
-                ? [s.latitude, s.longitude]
-                : null
-            const coords = backendCoords ?? STATE_COORDS[s.code]
-            if (!coords) return null
-            return {
-              lat: coords[0],
-              lng: coords[1],
-              label: s.name,
-              code: s.code,
-              count: byState[s.code]?.length ?? 0,
-            }
-          })
-          .filter(Boolean)
-
+        const { points: pts, listingsByCityKey: byKey } = buildCityMapModel(cities, listings)
         setPoints(pts)
+        setListingsByCityKey(byKey)
       } catch (err) {
         console.error('Failed to load map data:', err)
       }
@@ -109,13 +72,21 @@ function Map() {
   }, [])
 
   const sidebarListings = useMemo(() => {
-    if (!selectedState) return allListings
-    return listingsByState[selectedState.code] ?? []
-  }, [selectedState, allListings, listingsByState])
+    const base = !selectedState?.mapKey
+      ? allListings
+      : listingsByCityKey[selectedState.mapKey] ?? []
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return base
+    return base.filter((l) => String(l.title ?? '').toLowerCase().includes(q))
+  }, [selectedState, allListings, listingsByCityKey, searchQuery])
 
   const handleStateClick = (point) => {
-    setSelectedState((prev) => (prev?.label === point.label ? null : point))
+    setSelectedState((prev) => (prev?.mapKey === point.mapKey ? null : point))
   }
+
+  const sidebarTitle = selectedState?.mapKey
+    ? `${selectedState.label}, ${selectedState.subtitle}`
+    : 'All Listings'
 
   return (
     <main className="map-page">
@@ -126,9 +97,7 @@ function Map() {
       <div className="map-body">
         <aside className="map-sidebar">
           <div className="map-sidebar-header">
-            <h3>
-              {selectedState ? `${selectedState.label}` : 'All Listings'}
-            </h3>
+            <h3>{sidebarTitle}</h3>
             <p>
               {sidebarListings.length} listing
               {sidebarListings.length !== 1 ? 's' : ''}

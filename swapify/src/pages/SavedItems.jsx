@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import Post from '../components/post'
 import { readListings, readUsers } from '../api'
 import { getListingImageUrls } from '../utils/images'
+import { formatGeoLocation } from '../utils/geo'
 import '../styles/savedItems.css';
 
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
@@ -45,17 +46,17 @@ const SavedItems = () => {
   }, [routeIdentifier]);
 
   const filteredSavedListings = useMemo(() => {
-    const needle = String(searchQuery || '').trim().toLowerCase();
-    if (!needle) {
+    const searchTerm = String(searchQuery || '').trim().toLowerCase();
+    if (!searchTerm) {
       return savedListings;
     }
 
     return savedListings.filter((listing) => {
       const title = String(listing?.title || '').toLowerCase();
       const description = String(listing?.description || '').toLowerCase();
-      const location = String(listing?.meetup_location || '').toLowerCase();
+      const geo = formatGeoLocation(listing).toLowerCase();
 
-      return title.includes(needle) || description.includes(needle) || location.includes(needle);
+      return title.includes(searchTerm) || description.includes(searchTerm) || geo.includes(searchTerm);
     });
   }, [savedListings, searchQuery]);
 
@@ -144,7 +145,7 @@ const SavedItems = () => {
                 title={listing.title}
                 description={listing.description}
                 imageUrls={getListingImageUrls(listing)}
-                location={listing.meetup_location}
+                location={formatGeoLocation(listing)}
                 transactionType={listing.transaction_type}
                 price={listing.price}
                 owner={listing.owner}

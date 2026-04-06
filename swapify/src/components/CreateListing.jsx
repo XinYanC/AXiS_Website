@@ -30,7 +30,9 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [transactionType, setTransactionType] = useState('sell')
-    const [meetupCity, setMeetupCity] = useState('')
+    const [listingCity, setListingCity] = useState('')
+    const [listingState, setListingState] = useState('')
+    const [listingCountry, setListingCountry] = useState('')
     const [price, setPrice] = useState('')
     const [uploadedImageUrls, setUploadedImageUrls] = useState([])
     const [isLoading, setIsLoading] = useState(false)
@@ -180,7 +182,9 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
         setTitle('')
         setDescription('')
         setTransactionType('sell')
-        setMeetupCity('')
+        setListingCity('')
+        setListingState('')
+        setListingCountry('')
         setPrice('')
         setUploadedImageUrls([])
         setError('')
@@ -200,8 +204,8 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                 throw new Error('Could not determine the logged-in user. Please log out and log back in.')
             }
 
-            if (!meetupCity) {
-                throw new Error('Please select a valid meetup city.')
+            if (!listingCity || !listingState || !listingCountry) {
+                throw new Error('Please select country, state, and city.')
             }
 
             const payload = {
@@ -209,7 +213,9 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                 description,
                 transaction_type: transactionType,
                 owner: ownerIdentifier,
-                meetup_location: meetupCity,
+                city: listingCity,
+                state: listingState,
+                country: listingCountry,
                 price:
                     transactionType === 'sell' && price !== '' && price != null
                         ? parseFloat(price)
@@ -233,7 +239,9 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                 setTitle('')
                 setDescription('')
                 setTransactionType('sell')
-                setMeetupCity('')
+                setListingCity('')
+                setListingState('')
+                setListingCountry('')
                 setPrice('')
                 setUploadedImageUrls([])
                 setSuccess(false)
@@ -285,9 +293,14 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                             />
 
                             <LocationDropdown
-                                legend="Meetup Location"
+                                legend="Location"
+                                required
                                 disabled={isLoading || isUploadingImages}
-                                onSelectionChange={({ cityName }) => setMeetupCity(cityName)}
+                                onSelectionChange={({ cityName, countryCode: cc, stateCode: sc }) => {
+                                    setListingCity(cityName ? String(cityName).trim() : '')
+                                    setListingState(sc ? String(sc).trim() : '')
+                                    setListingCountry(cc ? String(cc).trim() : '')
+                                }}
                             />
 
                             <div className="image-upload-section">

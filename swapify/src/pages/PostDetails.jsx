@@ -4,6 +4,7 @@ import { readListingById, readUsers, updateListing, updateUser } from '../api'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { getListingImageUrls } from '../utils/images'
+import { formatGeoLocation } from '../utils/geo'
 import { FiHeart, FiMapPin } from 'react-icons/fi'
 import '../styles/postDetails.css'
 
@@ -325,7 +326,7 @@ function PostDetails() {
 
   const handleMarkAsSold = async () => {
     if (!isOwnedByCurrentUser || !listing?._id) return
-    
+
     try {
       await updateListing(String(listing._id).trim(), { status: 'sold' })
       setListing((prev) => (prev ? { ...prev, status: 'sold' } : null))
@@ -337,7 +338,7 @@ function PostDetails() {
 
   const handleMessageSeller = (e) => {
     e.preventDefault()
-    
+
     const viewer = getViewerIdentity()
     const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
     if (!viewerKey) {
@@ -369,7 +370,7 @@ function PostDetails() {
     return 0
   }, [listing])
 
-  const locationLabel = listing?.meetup_location || 'Location not specified'
+  const locationLabel = formatGeoLocation(listing) || 'Unknown location'
   const hasLocation = Boolean(String(locationLabel || '').trim() && locationLabel !== 'Location not specified')
   const mapEmbedUrl = hasLocation
     ? `https://www.google.com/maps?q=${encodeURIComponent(String(locationLabel))}&output=embed`
@@ -450,8 +451,8 @@ function PostDetails() {
 
   return (
     <main className="post-details-page">
-      <Navbar 
-        searchQuery={searchQuery} 
+      <Navbar
+        searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         onSearchSubmit={handleSearchSubmit}
       />
