@@ -293,12 +293,24 @@ function Home() {
       </div>
 
       <button
-        className="floating-add-button"
-        onClick={() => setIsCreateListingOpen(true)}
-        aria-label="Create new listing"
+        type="button"
+        className="floating-help-button"
+        onClick={() => setIsHelpOpen(true)}
+        aria-label="Open icon guide"
+        title="Transaction types"
       >
-        +
+        ?
       </button>
+
+      {authState.isLoggedIn && (
+        <button
+          className="floating-add-button"
+          onClick={() => setIsCreateListingOpen(true)}
+          aria-label="Create new listing"
+        >
+          +
+        </button>
+      )}
 
       <CreateListing
         isOpen={isCreateListingOpen}
