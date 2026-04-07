@@ -43,6 +43,17 @@ const normalizeUsername = (value) =>
 
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
+const formatDateToMonthYear = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    } catch {
+        return 'N/A';
+    }
+};
+
 const Profile = () => {
     const { username } = useParams();
     const navigate = useNavigate();
@@ -53,10 +64,10 @@ const Profile = () => {
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const viewerIdentity = useMemo(() => ({
+    const getViewerIdentity = () => ({
         username: normalizeUsername(localStorage.getItem('swapify.username')),
         email: normalizeEmail(localStorage.getItem('swapify.email')),
-    }), []);
+    });
 
     // Memoize filtered listings to prevent unnecessary recalculations
     const filteredListings = useMemo(
@@ -67,11 +78,14 @@ const Profile = () => {
     );
 
     const isOwnProfile = useMemo(
-        () => Boolean(
-            (viewerIdentity.username && viewerIdentity.username === normalizeUsername(user?.username)) ||
-            (viewerIdentity.email && viewerIdentity.email === normalizeEmail(user?.email))
-        ),
-        [user, viewerIdentity]
+        () => {
+            const viewer = getViewerIdentity();
+            return Boolean(
+                (viewer.username && viewer.username === normalizeUsername(user?.username)) ||
+                (viewer.email && viewer.email === normalizeEmail(user?.email))
+            );
+        },
+        [user]
     );
 
     useEffect(() => {
@@ -100,18 +114,24 @@ const Profile = () => {
                 const routeAsUsername = normalizeUsername(routeIdentifier);
                 const routeAsEmail = normalizeEmail(routeIdentifier);
 
-                const candidateUsernames = [routeAsUsername, storedUsername].filter(Boolean);
-                const candidateEmails = [routeAsEmail, storedEmail].filter(Boolean);
-
-                const profileUser = usersArray.find((candidate) => {
+                // Try to find user by route identifier first
+                let profileUser = usersArray.find((candidate) => {
                     const candidateUsername = normalizeUsername(candidate?.username || '');
                     const candidateEmail = normalizeEmail(candidate?.email || '');
 
-                    const usernameMatch = candidateUsernames.includes(candidateUsername);
-                    const emailMatch = candidateEmail && candidateEmails.includes(candidateEmail);
-
-                    return usernameMatch || emailMatch;
+                    return candidateUsername === routeAsUsername || candidateEmail === routeAsEmail;
                 });
+
+                // If not found and we have a logged-in user, try to match by stored credentials
+                if (!profileUser && (storedUsername || storedEmail)) {
+                    profileUser = usersArray.find((candidate) => {
+                        const candidateUsername = normalizeUsername(candidate?.username || '');
+                        const candidateEmail = normalizeEmail(candidate?.email || '');
+
+                        return (storedUsername && candidateUsername === storedUsername) ||
+                               (storedEmail && candidateEmail === storedEmail);
+                    });
+                }
 
                 if (!profileUser) {
                     setUser(null);
@@ -146,7 +166,7 @@ const Profile = () => {
                     name: profileUser.name || displayUsername || username,
                     username: displayUsername,
                     location: formatGeoLocation(profileUser) || 'Unknown location',
-                    memberSince: profileUser.created_at || 'N/A',
+                    memberSince: formatDateToMonthYear(profileUser.created_at),
                     rating,
                     totalReviews: 0,
                     verified: isVerified,
@@ -213,7 +233,7 @@ const Profile = () => {
         );
     }
 
-    const profileMessagePath = `/messages?seller=${encodeURIComponent(user.name || user.username)}&profile=${encodeURIComponent(user.username || '')}`;
+    const profileMessagePath = `mailto:${encodeURIComponent(user.email || '')}`;
 
     return (
         <>
@@ -266,9 +286,9 @@ const Profile = () => {
                             </div>
 
                             {!isOwnProfile && (
-                                <Link to={profileMessagePath} className="profile-message-button">
+                                <a href={profileMessagePath} className="profile-message-button">
                                     Message Seller
-                                </Link>
+                                </a>
                             )}
 
                             <div className="profile-stats">
