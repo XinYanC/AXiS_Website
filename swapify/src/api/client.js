@@ -24,7 +24,10 @@ export async function apiRequest(path, options = {}) {
     response = await fetch(url, {
       ...options,
       headers,
-      keepalive: options.keepalive ?? method !== 'GET',
+      // Keepalive can cause large multipart uploads (such as image uploads) to fail
+      // in browsers because request bodies are capped when keepalive is enabled.
+      // Only opt in when a caller explicitly asks for it.
+      keepalive: options.keepalive ?? false,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown network error'
