@@ -164,17 +164,43 @@ function PostDetails() {
     }
     setError('')
 
-    try {
-      const listingData = await readListingById(id)
-      if (!listingData) {
-        setListing(null)
-        setSeller(null)
-        setError('Post not found.')
+    // Retry logic for newly created listings that may not be indexed yet
+    const maxRetries = 5
+    let retryCount = 0
+    let listingData = null
+
+    while (retryCount < maxRetries && !listingData) {
+      try {
+        listingData = await readListingById(id)
+        
+        if (!listingData) {
+          // Listing not found, retry after delay
+          retryCount += 1
+          if (retryCount < maxRetries) {
+            // Exponential backoff: 500ms, 1s, 2s, 4s, 8s
+            const delay = 500 * Math.pow(2, retryCount - 1)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching listing:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load post.')
+        setLoading(false)
         return
       }
+    }
 
-      setListing(listingData)
+    if (!listingData) {
+      setListing(null)
+      setSeller(null)
+      setError('Post not found.')
+      setLoading(false)
+      return
+    }
 
+    setListing(listingData)
+
+    try {
       const usersResponse = await readUsers()
       const usersArray = toUsersArray(usersResponse)
 

@@ -86,11 +86,74 @@
   text-decoration: none;
   color: inherit;
   background: #fff;
+  flex: 1;
 }
 
 .map-listing-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-color: #e2e8f0;
+}
+
+.map-listing-card-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  background: #fff;
+  transition: box-shadow 0.15s;
+}
+
+.map-listing-card-wrapper:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
+}
+
+.map-listing-like-button {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #999999;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-listing-like-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.map-listing-like-button:hover {
+  color: #ff6b6b;
+}
+
+.map-listing-like-button.liked {
+  color: #ff4b4b;
+}
+
+.map-listing-like-button.syncing {
+  opacity: 0.72;
+}
+
+.map-listing-like-button.syncing svg {
+  animation: heart-sync-pulse 0.95s ease-in-out infinite;
+}
+
+@keyframes heart-sync-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .map-listing-card-image-wrapper {

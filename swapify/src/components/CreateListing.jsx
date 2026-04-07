@@ -229,12 +229,12 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
             await createListing(payload)
             setSuccess(true)
 
-            // Call onSuccess callback if provided
+            // Call onSuccess callback if provided - wait for it to complete
             if (onSuccess) {
-                onSuccess()
+                await onSuccess()
             }
 
-            // Reset form after 1.5 seconds and close
+            // Reset form and close after success callback completes
             setTimeout(() => {
                 setTitle('')
                 setDescription('')
@@ -387,7 +387,7 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                         )}
 
                         {success && (
-                            <p className="success-message">Listing created successfully!</p>
+                            <p className="success-message">Listing created successfully! It may take a moment to appear in the feed.</p>
                         )}
 
                     </>
