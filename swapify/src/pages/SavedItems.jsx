@@ -32,7 +32,6 @@ const SavedItems = () => {
   const [savedListings, setSavedListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [reloadTrigger, setReloadTrigger] = useState(0);
   const loadSavedListingsRef = useRef(null);
 
   const viewerIdentifier = useMemo(() => {
@@ -117,38 +116,17 @@ const SavedItems = () => {
     // Load on mount
     loadSavedListings();
 
-    // Reload when user returns to the page (e.g., from PostDetails)
+    // Reload when page becomes visible (user switches back to tab or returns from another page)
     const handlePageFocus = () => {
       loadSavedListings();
     };
 
-    // Reload when saved items are updated elsewhere
-    const handleSavedItemsUpdated = () => {
-      loadSavedListings();
-    };
-
     window.addEventListener('focus', handlePageFocus);
-    window.addEventListener('swapify:saved-items-updated', handleSavedItemsUpdated);
 
     return () => {
       window.removeEventListener('focus', handlePageFocus);
-      window.removeEventListener('swapify:saved-items-updated', handleSavedItemsUpdated);
     };
-  }, [viewerIdentifier, navigate, reloadTrigger]);
-
-  // Reload when page becomes visible (user switches back to tab)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && loadSavedListingsRef.current) {
-        loadSavedListingsRef.current();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+  }, [viewerIdentifier, navigate]);
 
   return (
     <main className="saved-items-page">

@@ -1,9 +1,7 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { readCities } from '../api/cities'
 import { readListings } from '../api/listings'
-import { readUsers, updateUser } from '../api/users'
-import { updateListing } from '../api/listings'
 import Navbar from '../components/Navbar'
 import MapVisualizer from '../components/MapVisualizer'
 import CreateListing from '../components/CreateListing'
@@ -11,15 +9,8 @@ import { HeartIcon } from '../components/post'
 import { getListingImageUrls } from '../utils/images'
 import { formatGeoLocation } from '../utils/geo'
 import { buildCityMapModel } from '../utils/cityMapData'
+import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync'
 import '../styles/map.css'
-
-// Global like queue to serialize operations
-let likeQueue = Promise.resolve()
-
-const queueLikeOperation = async (operation) => {
-  likeQueue = likeQueue.then(() => operation())
-  return likeQueue;
-}
 
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase()
 
@@ -40,18 +31,6 @@ const resolveSavedPostIds = (user) => {
     return []
   }
   return savedField.map((item) => String(item || '').trim()).filter(Boolean)
-}
-
-const getViewerIdentity = () => {
-  const username = String(localStorage.getItem('swapify.username') || '').trim()
-  const email = String(localStorage.getItem('swapify.email') || '').trim()
-
-  return {
-    username,
-    email,
-    normalizedUsername: normalizeIdentifier(username),
-    normalizedEmail: normalizeIdentifier(email),
-  }
 }
 
 const getAuthState = () => {
@@ -84,8 +63,6 @@ function MapListingCard({ listing }) {
   const navigate = useNavigate()
   const [liked, setLiked] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
-  const pendingLikedRef = useRef(null)
-  const isSyncingRef = useRef(false)
   
   const images = getListingImageUrls(listing)
   const numericPrice = Number(listing.price)
@@ -97,160 +74,43 @@ function MapListingCard({ listing }) {
     })}`
     : 'Free'
 
-  // Load liked state on mount
+  // Load liked state from cache on mount and subscribe to changes
   useEffect(() => {
-    const loadLikedState = async () => {
-      try {
-        const username = localStorage.getItem('swapify.username')
-        const email = localStorage.getItem('swapify.email')
-        
-        if (!username && !email) {
-          setLiked(false)
-          return
-        }
+    const isLiked = getLikeStateFromCache(listing._id)
+    setLiked(isLiked)
 
-        const usersResponse = await readUsers()
-        const usersArray = usersResponse?.User ? Object.values(usersResponse.User) : []
-        
-        const viewerIdentifier = String(username || email).trim().toLowerCase()
-        const matchedUser = usersArray.find((user) => {
-          const userUsername = String(user?.username || '').trim().toLowerCase()
-          const userEmail = String(user?.email || '').trim().toLowerCase()
-          return userUsername === viewerIdentifier || userEmail === viewerIdentifier
-        })
-
-        if (matchedUser && Array.isArray(matchedUser.saved_listings)) {
-          const isLiked = matchedUser.saved_listings.includes(String(listing._id))
-          setLiked(isLiked)
-        }
-      } catch (err) {
-        console.error('Failed to load liked state:', err)
+    // Subscribe to cache changes to revert UI if sync fails
+    const unsubscribe = subscribeToCacheChanges((listingId, isLiked) => {
+      if (listingId === listing._id) {
+        setLiked(isLiked)
       }
-    }
+    })
 
-    loadLikedState()
+    return unsubscribe
   }, [listing._id])
 
-  const syncLikeToBackend = useCallback(async ({ listingId, nextLiked }) => {
-    const normalizedListingId = String(listingId || '').trim()
-    if (!normalizedListingId) {
-      return
-    }
 
-    const viewer = getViewerIdentity()
-    const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
-    if (!viewerKey) {
-      return
-    }
-
-    try {
-      const usersResponse = await readUsers()
-      const users = toUsersArray(usersResponse)
-
-      const matchedUser = users.find((candidate) => {
-        const candidateUsername = normalizeIdentifier(candidate?.username)
-        const candidateEmail = normalizeIdentifier(candidate?.email)
-
-        return (
-          (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-          (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-        )
-      })
-
-      if (!matchedUser) {
-        return
-      }
-
-      const currentSaved = resolveSavedPostIds(matchedUser)
-      const nextSaved = nextLiked
-        ? Array.from(new Set([...currentSaved, normalizedListingId]))
-        : currentSaved.filter((savedId) => savedId !== normalizedListingId)
-
-      const userIdentifierForUpdate = matchedUser?.username
-
-      if (userIdentifierForUpdate) {
-        await updateUser(userIdentifierForUpdate, {
-          saved_listings: nextSaved,
-        })
-      }
-
-      // Calculate new like count
-      const numLikes = users.reduce((count, candidate) => {
-        const candidateSaved = resolveSavedPostIds(candidate)
-        const candidateUsername = normalizeIdentifier(candidate?.username)
-        const candidateEmail = normalizeIdentifier(candidate?.email)
-        const matchedUsername = normalizeIdentifier(matchedUser?.username)
-        const matchedEmail = normalizeIdentifier(matchedUser?.email)
-
-        const isMatchedUser =
-          (matchedUsername && candidateUsername === matchedUsername) ||
-          (matchedEmail && candidateEmail === matchedEmail)
-
-        const effectiveSaved = isMatchedUser ? nextSaved : candidateSaved
-
-        return effectiveSaved.includes(normalizedListingId) ? count + 1 : count
-      }, 0)
-
-      await updateListing(normalizedListingId, {
-        num_likes: numLikes,
-      })
-
-      // Notify SavedItems page that likes changed
-      window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'))
-    } catch (err) {
-      console.error('Failed to sync like to backend:', err)
-    }
-  }, [])
-
-  const processPendingLikeSync = useCallback(async () => {
-    if (isSyncingRef.current || !listing._id) {
-      return
-    }
-
-    isSyncingRef.current = true
-    setIsUpdating(true)
-
-    try {
-      while (pendingLikedRef.current !== null) {
-        const targetLiked = pendingLikedRef.current
-        pendingLikedRef.current = null
-
-        const listingId = String(listing._id)
-
-        try {
-          await queueLikeOperation(async () => {
-            await syncLikeToBackend({ listingId, nextLiked: targetLiked })
-          })
-          // Notify SavedItems page that likes changed
-          window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'))
-        } catch (backendErr) {
-          console.error('Failed to sync like with backend:', backendErr)
-          if (pendingLikedRef.current === null) {
-            setLiked(!targetLiked)
-          }
-        }
-      }
-    } finally {
-      isSyncingRef.current = false
-      setIsUpdating(false)
-    }
-  }, [listing._id, syncLikeToBackend])
 
   const handleLike = (e) => {
     e.preventDefault()
     e.stopPropagation()
 
-    const viewer = getViewerIdentity()
-    const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
-    if (!viewerKey) {
+    const username = localStorage.getItem('swapify.username')
+    const email = localStorage.getItem('swapify.email')
+
+    if (!username && !email) {
       navigate('/login', { state: { fromLike: true } })
       return
     }
 
     const nextLiked = !liked
     setLiked(nextLiked)
-    pendingLikedRef.current = nextLiked
-    void processPendingLikeSync()
+    setIsUpdating(true)
+
+    toggleLike(listing._id, username, email)
+      .finally(() => {
+        setIsUpdating(false)
+      })
   }
 
   return (
@@ -288,6 +148,7 @@ function Home() {
   const [listingsByCityKey, setListingsByCityKey] = useState({})
   const [selectedState, setSelectedState] = useState(null)
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [authState, setAuthState] = useState(getAuthState)
 
   // useCallback to memoize the applyMapData function

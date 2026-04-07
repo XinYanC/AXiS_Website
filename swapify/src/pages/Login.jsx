@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authLogin, readUsers } from '../api'
+import { initializeLikeCache } from '../utils/likeSync'
 import '../styles/login.css'
 import FullLogo from '../assets/FullLogo.PNG'
 
@@ -88,7 +89,12 @@ const Login = () => {
                 throw new Error('Failed to save login credentials to local storage')
             }
 
-            console.log('Login successful - navigating to home')
+            console.log('Login successful - initializing like cache')
+            // Initialize the like cache in the background (don't wait for it)
+            initializeLikeCache(verifyUsername || '', verifyEmail).catch(err => {
+                console.warn('Failed to initialize like cache, will load on demand:', err)
+            })
+
             navigate('/', { replace: true })
         } catch (err) {
             setError(err.message || 'Login failed')

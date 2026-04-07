@@ -1,20 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { readListingById, readUsers, updateListing, updateUser } from '../api'
+import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { getListingImageUrls } from '../utils/images'
 import { formatGeoLocation } from '../utils/geo'
 import { FiHeart, FiMapPin } from 'react-icons/fi'
 import '../styles/postDetails.css'
-
-// Global queue to serialize like/unlike operations and prevent race conditions
-let likeQueue = Promise.resolve();
-
-const queueLikeOperation = async (operation) => {
-  likeQueue = likeQueue.then(() => operation());
-  return likeQueue;
-};
 
 const normalizeUsername = (value) => String(value || '').trim().replace(/^@+/, '').toLowerCase()
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase()
@@ -28,28 +21,6 @@ const toUsersArray = (usersResponse) => {
   return []
 }
 
-const resolveSavedPostIds = (user) => {
-  const savedField = user?.saved_listings
-  if (!Array.isArray(savedField)) {
-    return []
-  }
-  return savedField.map((item) => String(item || '').trim()).filter(Boolean)
-}
-
-const getStoredViewerIdentity = () => {
-  if (typeof window === 'undefined') {
-    return {
-      username: '',
-      email: '',
-    }
-  }
-
-  return {
-    username: normalizeUsername(localStorage.getItem('swapify.username')),
-    email: normalizeEmail(localStorage.getItem('swapify.email')),
-  }
-}
-
 const getViewerIdentity = () => {
   const username = String(localStorage.getItem('swapify.username') || '').trim()
   const email = String(localStorage.getItem('swapify.email') || '').trim()
@@ -59,74 +30,6 @@ const getViewerIdentity = () => {
     email,
     normalizedUsername: normalizeIdentifier(username),
     normalizedEmail: normalizeIdentifier(email),
-  }
-}
-
-const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
-  const normalizedListingId = String(listingId || '').trim()
-  if (!normalizedListingId) {
-    return
-  }
-
-  const viewer = getViewerIdentity()
-  const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
-  if (!viewerKey) {
-    return
-  }
-
-  try {
-    const usersResponse = await readUsers()
-    const users = toUsersArray(usersResponse)
-
-    const matchedUser = users.find((candidate) => {
-      const candidateUsername = normalizeIdentifier(candidate?.username)
-      const candidateEmail = normalizeIdentifier(candidate?.email)
-
-      return (
-        (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-        (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-      )
-    })
-
-    if (!matchedUser) {
-      return
-    }
-
-    const currentSaved = resolveSavedPostIds(matchedUser)
-    const nextSaved = nextLiked
-      ? Array.from(new Set([...currentSaved, normalizedListingId]))
-      : currentSaved.filter((savedId) => savedId !== normalizedListingId)
-
-    const userIdentifierForUpdate = matchedUser?.username
-    if (userIdentifierForUpdate) {
-      await updateUser(userIdentifierForUpdate, {
-        saved_listings: nextSaved,
-      })
-    }
-
-    // Calculate new like count from current users data
-    const numLikes = users.reduce((count, candidate) => {
-      const candidateSaved = resolveSavedPostIds(candidate)
-      const candidateUsername = normalizeIdentifier(candidate?.username)
-      const candidateEmail = normalizeIdentifier(candidate?.email)
-      const matchedUsername = normalizeIdentifier(matchedUser?.username)
-      const matchedEmail = normalizeIdentifier(matchedUser?.email)
-
-      const isMatchedUser =
-        (matchedUsername && candidateUsername === matchedUsername) ||
-        (matchedEmail && candidateEmail === matchedEmail)
-
-      const effectiveSaved = isMatchedUser ? nextSaved : candidateSaved
-
-      return effectiveSaved.includes(normalizedListingId) ? count + 1 : count
-    }, 0)
-
-    await updateListing(normalizedListingId, {
-      num_likes: numLikes,
-    })
-  } catch (err) {
-    console.error('Error syncing like to backend:', err)
-    throw err
   }
 }
 
@@ -218,20 +121,9 @@ function PostDetails() {
       const viewer = getViewerIdentity()
       const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
       if (viewerKey) {
-        const matchedUser = usersArray.find((candidate) => {
-          const candidateUsername = normalizeIdentifier(candidate?.username)
-          const candidateEmail = normalizeIdentifier(candidate?.email)
-
-          return (
-            (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-            (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-          )
-        })
-
-        const savedIds = matchedUser ? resolveSavedPostIds(matchedUser) : []
         const normalizedId = String(id).trim()
-        const isLiked = savedIds.includes(normalizedId)
-        console.debug(`PostDetails - Post ${id}, isLiked: ${isLiked}, savedIds:`, savedIds)
+        const isLiked = getLikeStateFromCache(normalizedId)
+        console.debug(`PostDetails - Post ${id}, isLiked: ${isLiked}`)
         setLiked(isLiked)
       } else {
         setLiked(false)
@@ -262,6 +154,17 @@ function PostDetails() {
     }
   }, [loadData])
 
+  useEffect(() => {
+    // Subscribe to cache changes to revert UI if sync fails
+    const unsubscribe = subscribeToCacheChanges((listingId, isLiked) => {
+      if (listingId === String(id).trim()) {
+        setLiked(isLiked)
+      }
+    })
+
+    return unsubscribe
+  }, [id])
+
   const processPendingLikeSync = useCallback(async () => {
     if (isSyncingRef.current || !id) {
       return
@@ -275,11 +178,10 @@ function PostDetails() {
         const targetLiked = pendingLikedRef.current
         pendingLikedRef.current = null
         const listingId = String(id)
+        const viewer = getViewerIdentity()
 
         try {
-          await queueLikeOperation(async () => {
-            await syncLikeAndSaveToBackend({ listingId, nextLiked: targetLiked })
-          })
+          await toggleLike(listingId, viewer.username, viewer.email)
         } catch (backendErr) {
           console.error('Failed to sync save/like with backend:', backendErr)
           if (pendingLikedRef.current === null) {

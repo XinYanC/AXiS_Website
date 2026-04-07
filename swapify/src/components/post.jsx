@@ -1,16 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { normalizeImageList } from '../utils/images';
-import { readUsers, updateListing, updateUser } from '../api';
+import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync';
 import '../styles/post.css';
-
-// Global queue to serialize like/unlike operations and prevent race conditions
-let likeQueue = Promise.resolve();
-
-const queueLikeOperation = async (operation) => {
-    likeQueue = likeQueue.then(() => operation());
-    return likeQueue;
-};
 
 // SVG Icons as components (exported for use in icon legend/help)
 export const HeartIcon = () => (
@@ -67,94 +59,6 @@ const resolveSavedPostIds = (user) => {
     return savedField.map((item) => String(item || '').trim()).filter(Boolean);
 };
 
-const getViewerIdentity = () => {
-    const username = String(localStorage.getItem('swapify.username') || '').trim();
-    const email = String(localStorage.getItem('swapify.email') || '').trim();
-
-    return {
-        username,
-        email,
-        normalizedUsername: normalizeIdentifier(username),
-        normalizedEmail: normalizeIdentifier(email),
-    };
-};
-
-const syncLikeAndSaveToBackend = async ({ listingId, nextLiked }) => {
-    const normalizedListingId = String(listingId || '').trim();
-    if (!normalizedListingId) {
-        return;
-    }
-
-    const viewer = getViewerIdentity();
-    const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail;
-    if (!viewerKey) {
-        return;
-    }
-
-    try {
-        const usersResponse = await readUsers();
-        const users = toUsersArray(usersResponse);
-
-        const matchedUser = users.find((candidate) => {
-            const candidateUsername = normalizeIdentifier(candidate?.username);
-            const candidateEmail = normalizeIdentifier(candidate?.email);
-
-            return (
-                (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-                (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-            );
-        });
-
-        if (!matchedUser) {
-            return;
-        }
-
-        const currentSaved = resolveSavedPostIds(matchedUser);
-        const nextSaved = nextLiked
-            ? Array.from(new Set([...currentSaved, normalizedListingId]))
-            : currentSaved.filter((savedId) => savedId !== normalizedListingId);
-
-        console.log(`syncLikeAndSaveToBackend: User ${viewerKey}, nextLiked=$
-                {nextLiked}, currentSaved=[${currentSaved.join(', ')}], nextSaved=[${nextSaved.join(', ')}]`);
-        const userIdentifierForUpdate = matchedUser?.username;
-
-        if (userIdentifierForUpdate) {
-            // Update user's saved_listings
-            console.log(`Sending to backend: user=${userIdentifierForUpdate}, saved_listings=[${nextSaved.join(', ')}]`);
-            await updateUser(userIdentifierForUpdate, {
-                saved_listings: nextSaved,
-            });
-        }
-
-        // Calculate new like count from current users data (before the update for accuracy)
-        const numLikes = users.reduce((count, candidate) => {
-            const candidateSaved = resolveSavedPostIds(candidate);
-            const candidateUsername = normalizeIdentifier(candidate?.username);
-            const candidateEmail = normalizeIdentifier(candidate?.email);
-            const matchedUsername = normalizeIdentifier(matchedUser?.username);
-            const matchedEmail = normalizeIdentifier(matchedUser?.email);
-
-            const isMatchedUser =
-                (matchedUsername && candidateUsername === matchedUsername) ||
-                (matchedEmail && candidateEmail === matchedEmail);
-
-            const effectiveSaved = isMatchedUser ? nextSaved : candidateSaved;
-
-            return effectiveSaved.includes(normalizedListingId) ? count + 1 : count;
-        }, 0);
-
-        // Update listing's num_likes
-        await updateListing(normalizedListingId, {
-            num_likes: numLikes,
-        });
-    } catch (err) {
-        console.error('Error syncing like to backend:', err);
-        throw err;
-    }
-};
-
-
-
 const Post = ({
     id,
     title,
@@ -168,8 +72,6 @@ const Post = ({
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imageErrors, setImageErrors] = useState({});
     const [isUpdating, setIsUpdating] = useState(false);
-    const pendingLikedRef = useRef(null);
-    const isSyncingRef = useRef(false);
     const navigate = useNavigate();
 
     const resolvedImageUrls = useMemo(() => {
@@ -185,62 +87,24 @@ const Post = ({
         setImageErrors({});
     }, [id, resolvedImageUrls]);
 
-    // Fetch liked state from backend on mount
+    // Load liked state from cache on mount and subscribe to changes
     useEffect(() => {
-        const fetchLikedState = async () => {
-            if (!id) {
-                console.warn('Post mount: no id provided');
-                setLiked(false);
-                return;
-            }
+        if (!id) {
+            setLiked(false);
+            return;
+        }
 
-            console.log(`Post ${id}: Fetching liked state...`);
+        const isLiked = getLikeStateFromCache(id);
+        setLiked(isLiked);
 
-            try {
-                const viewer = getViewerIdentity();
-                const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail;
-                if (!viewerKey) {
-                    console.warn(`Post ${id}: No viewer identity found`);
-                    setLiked(false);
-                    return;
-                }
-
-                console.log(`Post ${id}: Viewer is`, viewerKey);
-                const usersResponse = await readUsers();
-                console.log(`Post ${id}: Fetched users:`, usersResponse);
-                const users = toUsersArray(usersResponse);
-                console.log(`Post ${id}: Users array has ${users.length} users`);
-
-                const matchedUser = users.find((candidate) => {
-                    const candidateUsername = normalizeIdentifier(candidate?.username);
-                    const candidateEmail = normalizeIdentifier(candidate?.email);
-
-                    return (
-                        (viewer.normalizedUsername && candidateUsername === viewer.normalizedUsername) ||
-                        (viewer.normalizedEmail && candidateEmail === viewer.normalizedEmail)
-                    );
-                });
-
-                if (!matchedUser) {
-                    console.warn(`Post ${id}: No matched user found for viewer`, viewerKey);
-                    setLiked(false);
-                    return;
-                }
-
-                console.log(`Post ${id}: Matched user object:`, matchedUser);
-                const savedIds = resolveSavedPostIds(matchedUser);
-                const normalizedId = String(id).trim();
-                const isLiked = savedIds.includes(normalizedId);
-
-                console.log(`Post ${id}: Checking if liked - normalizedId="${normalizedId}", savedIds=[${savedIds.join(', ')}], result=${isLiked}`);
+        // Subscribe to cache changes to revert UI if sync fails
+        const unsubscribe = subscribeToCacheChanges((listingId, isLiked) => {
+            if (listingId === id) {
                 setLiked(isLiked);
-            } catch (err) {
-                console.error(`Post ${id}: Error fetching liked state:`, err);
-                setLiked(false);
             }
-        };
+        });
 
-        fetchLikedState();
+        return unsubscribe;
     }, [id]);
 
     const numericPrice = Number(price);
@@ -260,62 +124,6 @@ const Post = ({
         return raw.charAt(0).toUpperCase() + raw.slice(1).replace('-', ' ')
     }
 
-    const processPendingLikeSync = useCallback(async () => {
-        if (isSyncingRef.current || !id) {
-            return;
-        }
-
-        isSyncingRef.current = true;
-        setIsUpdating(true);
-
-        try {
-            while (pendingLikedRef.current !== null) {
-                const targetLiked = pendingLikedRef.current;
-                pendingLikedRef.current = null;
-
-                const listingId = String(id);
-
-                try {
-                    await queueLikeOperation(async () => {
-                        await syncLikeAndSaveToBackend({ listingId, nextLiked: targetLiked });
-                    });
-                    // Notify SavedItems page that likes changed
-                    window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'));
-                } catch (backendErr) {
-                    console.error('Failed to sync save/like with backend:', backendErr);
-                    if (pendingLikedRef.current === null) {
-                        setLiked(!targetLiked);
-                    }
-                }
-            }
-        } finally {
-            isSyncingRef.current = false;
-            setIsUpdating(false);
-        }
-    }, [id]);
-
-    useEffect(() => {
-        const flushPendingLikeSync = () => {
-            if (pendingLikedRef.current !== null) {
-                void processPendingLikeSync();
-            }
-        };
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'hidden') {
-                flushPendingLikeSync();
-            }
-        };
-
-        window.addEventListener('pagehide', flushPendingLikeSync);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        return () => {
-            window.removeEventListener('pagehide', flushPendingLikeSync);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
-    }, [processPendingLikeSync]);
-
     const handleLike = (e) => {
         e.stopPropagation();
 
@@ -323,19 +131,22 @@ const Post = ({
             return;
         }
 
-        const viewer = getViewerIdentity();
-        const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail;
-        if (!viewerKey) {
-            // Redirect to login if not logged in
+        const username = localStorage.getItem('swapify.username');
+        const email = localStorage.getItem('swapify.email');
+
+        if (!username && !email) {
             navigate('/login', { state: { fromLike: true } });
             return;
         }
 
         const nextLiked = !liked;
-
         setLiked(nextLiked);
-        pendingLikedRef.current = nextLiked;
-        void processPendingLikeSync();
+        setIsUpdating(true);
+
+        toggleLike(id, username, email)
+            .finally(() => {
+                setIsUpdating(false);
+            });
     };
 
     const handleOpenPost = () => {
