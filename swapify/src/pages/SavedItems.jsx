@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Post from '../components/post'
@@ -32,6 +32,8 @@ const SavedItems = () => {
   const [savedListings, setSavedListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+  const loadSavedListingsRef = useRef(null);
 
   const viewerIdentifier = useMemo(() => {
     const routeValue = normalizeIdentifier(routeIdentifier);
@@ -85,6 +87,7 @@ const SavedItems = () => {
 
         if (!matchedUser || backendSavedIds.length === 0) {
           setSavedListings([]);
+          setLoading(false);
           return;
         }
 
@@ -108,6 +111,9 @@ const SavedItems = () => {
       }
     };
 
+    // Store the function in a ref so we can call it from event handlers
+    loadSavedListingsRef.current = loadSavedListings;
+
     // Load on mount
     loadSavedListings();
 
@@ -116,12 +122,33 @@ const SavedItems = () => {
       loadSavedListings();
     };
 
+    // Reload when saved items are updated elsewhere
+    const handleSavedItemsUpdated = () => {
+      loadSavedListings();
+    };
+
     window.addEventListener('focus', handlePageFocus);
+    window.addEventListener('swapify:saved-items-updated', handleSavedItemsUpdated);
 
     return () => {
       window.removeEventListener('focus', handlePageFocus);
+      window.removeEventListener('swapify:saved-items-updated', handleSavedItemsUpdated);
     };
-  }, [viewerIdentifier, navigate]);
+  }, [viewerIdentifier, navigate, reloadTrigger]);
+
+  // Reload when page becomes visible (user switches back to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && loadSavedListingsRef.current) {
+        loadSavedListingsRef.current();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <main className="saved-items-page">

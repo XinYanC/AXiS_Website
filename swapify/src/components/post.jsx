@@ -279,6 +279,8 @@ const Post = ({
                     await queueLikeOperation(async () => {
                         await syncLikeAndSaveToBackend({ listingId, nextLiked: targetLiked });
                     });
+                    // Notify SavedItems page that likes changed
+                    window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'));
                 } catch (backendErr) {
                     console.error('Failed to sync save/like with backend:', backendErr);
                     if (pendingLikedRef.current === null) {

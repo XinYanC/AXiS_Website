@@ -23,6 +23,10 @@ const Login = () => {
         try {
             const response = await authLogin({ email, password })
 
+            if (!response) {
+                throw new Error('No response from login endpoint')
+            }
+
             const responseUser =
                 response?.user ||
                 response?.User ||
@@ -34,6 +38,10 @@ const Login = () => {
                 responseUser?.username || response?.username || ''
             const resolvedEmail =
                 responseUser?.email || response?.email || email
+
+            if (!resolvedEmail) {
+                throw new Error('Email not returned from login')
+            }
 
             if (!username && resolvedEmail) {
                 try {
@@ -55,21 +63,39 @@ const Login = () => {
                     }
                 } catch (lookupErr) {
                     console.warn('Could not resolve username from users list:', lookupErr)
+                    // Continue with login even if username lookup fails - username will be empty
                 }
             }
 
-            localStorage.setItem('swapify.authenticated', 'true')
+            // Clear old auth state first
             localStorage.removeItem('swapify.username')
+            localStorage.removeItem('swapify.email')
+            localStorage.removeItem('swapify.authenticated')
+
+            // Set new auth state
             if (username) {
-                localStorage.setItem('swapify.username', String(username))
+                localStorage.setItem('swapify.username', String(username).trim())
             }
-            if (resolvedEmail) {
-                localStorage.setItem('swapify.email', String(resolvedEmail))
+            localStorage.setItem('swapify.email', String(resolvedEmail).trim())
+            localStorage.setItem('swapify.authenticated', 'true')
+
+            // Verify localStorage was actually set before navigating
+            const verifyUsername = localStorage.getItem('swapify.username')
+            const verifyEmail = localStorage.getItem('swapify.email')
+            const verifyAuth = localStorage.getItem('swapify.authenticated')
+
+            if (!verifyEmail || !verifyAuth) {
+                throw new Error('Failed to save login credentials to local storage')
             }
 
+            console.log('Login successful - navigating to home')
             navigate('/', { replace: true })
         } catch (err) {
             setError(err.message || 'Login failed')
+            // Clear any partial auth state on error
+            localStorage.removeItem('swapify.username')
+            localStorage.removeItem('swapify.email')
+            localStorage.removeItem('swapify.authenticated')
         } finally {
             setLoading(false)
         }

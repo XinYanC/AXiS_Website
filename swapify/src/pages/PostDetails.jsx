@@ -337,18 +337,14 @@ function PostDetails() {
   }
 
   const handleMessageSeller = (e) => {
-    e.preventDefault()
-
     const viewer = getViewerIdentity()
     const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
     if (!viewerKey) {
       // Redirect to login if not logged in
+      e.preventDefault()
       navigate('/login', { state: { fromMessage: true } })
       return
     }
-
-    // If logged in, navigate to messages
-    navigate(messageSellerPath)
   }
 
   const priceLabel = useMemo(() => {
@@ -583,12 +579,13 @@ function PostDetails() {
                   </Link>
                 )}
                 {!isOwnedByCurrentUser && seller?.email ? (
-                  <button
+                  <a
+                    href={`mailto:${encodeURIComponent(seller.email)}`}
                     onClick={handleMessageSeller}
                     className="post-message-button"
                   >
                     Message Seller
-                  </button>
+                  </a>
                 ) : null}
               </div>
             </div>
