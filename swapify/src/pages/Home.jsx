@@ -64,7 +64,6 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({ city: '', price: '', transactionType: '' })
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
-  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [authState, setAuthState] = useState(getAuthState)
 
   // useCallback to memoize the applyMapData function
@@ -181,16 +180,6 @@ function Home() {
           onStateClick={handleStateClick}
         />
       </div>
-
-      <button
-        type="button"
-        className="floating-help-button"
-        onClick={() => setIsHelpOpen(true)}
-        aria-label="Open icon guide"
-        title="Transaction types"
-      >
-        ?
-      </button>
 
       {authState.isLoggedIn && (
         <button

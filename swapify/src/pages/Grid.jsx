@@ -4,12 +4,10 @@ import { readListings, searchListings } from '../api/listings'
 import Navbar from '../components/Navbar'
 import Post from '../components/post'
 import CreateListing from '../components/CreateListing'
-import PostIconsHelp from '../components/PostIconsHelp'
 import { getListingImageUrls } from '../utils/images'
 import { formatGeoLocation } from '../utils/geo'
 import { filterListings } from '../utils/listingFilters'
 import '../styles/createListing.css'
-import '../styles/postIconsHelp.css'
 
 const getAuthState = () => {
   const isLoggedIn = localStorage.getItem('swapify.authenticated') === 'true'
@@ -26,7 +24,6 @@ const getAuthState = () => {
 function Grid() {
   const [searchParams] = useSearchParams()
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
-  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [listings, setListings] = useState([])
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [authState, setAuthState] = useState(getAuthState)
@@ -129,16 +126,6 @@ function Grid() {
       </div>
 
       <button
-        type="button"
-        className="floating-help-button"
-        onClick={() => setIsHelpOpen(true)}
-        aria-label="Open icon guide"
-        title="Transaction types"
-      >
-        ?
-      </button>
-
-      <button
         className="floating-add-button"
         onClick={() => setIsCreateListingOpen(true)}
         aria-label="Create new listing"
@@ -154,7 +141,6 @@ function Grid() {
         currentUserIdentifier={authState.username || authState.email}
       />
 
-      <PostIconsHelp isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </main>
   )
 }
