@@ -35,6 +35,7 @@ function Navbar({
   searchQuery = '',
   onSearchChange,
   onSearchSubmit,
+  autoNavigateToGridOnEnter = true,
   showLogoutButton = false,
   onLogout,
   filters = DEFAULT_NAV_FILTERS,
@@ -43,6 +44,7 @@ function Navbar({
   const location = useLocation()
   const navigate = useNavigate()
   const [authState, setAuthState] = useState(getAuthState)
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
 
   useEffect(() => {
     const syncAuthState = () => {
@@ -58,20 +60,27 @@ function Navbar({
     }
   }, [])
 
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery || '')
+  }, [searchQuery])
+
   const handleSearchChange = (e) => {
+    const nextValue = e.target.value
+    setLocalSearchQuery(nextValue)
     if (typeof onSearchChange === 'function') {
-      onSearchChange(e)
+      onSearchChange(e, nextValue)
     }
   }
 
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') {
+      const trimmedQuery = localSearchQuery.trim()
       if (typeof onSearchSubmit === 'function') {
-        onSearchSubmit(e)
+        onSearchSubmit(e, localSearchQuery)
       }
       // Auto-navigate to grid with search query
-      if (searchQuery.trim()) {
-        navigate(`/grid?search=${encodeURIComponent(searchQuery.trim())}`)
+      if (autoNavigateToGridOnEnter && trimmedQuery) {
+        navigate(`/grid?search=${encodeURIComponent(trimmedQuery)}`)
       }
     }
   }
@@ -101,7 +110,7 @@ function Navbar({
           type="text"
           className="search-bar"
           placeholder="Search listings..."
-          value={searchQuery}
+          value={localSearchQuery}
           onChange={handleSearchChange}
           onKeyDown={handleSearchKeyDown}
         />

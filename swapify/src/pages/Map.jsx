@@ -71,6 +71,7 @@ function Map() {
       <Navbar
         searchQuery={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
+        autoNavigateToGridOnEnter={false}
       />
       <div className="map-body">
         <aside className="map-sidebar">

@@ -5,6 +5,11 @@
   background: #f8fafc;
 }
 
+/* Keep navbar and search input above Leaflet panes on map screens. */
+.map-page .main-nav {
+  z-index: 5000;
+}
+
 .map-body {
   display: flex;
   flex: 1;

@@ -60,6 +60,7 @@ function Home() {
   const [allListings, setAllListings] = useState([])
   const [listingsByCityKey, setListingsByCityKey] = useState({})
   const [selectedState, setSelectedState] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [authState, setAuthState] = useState(getAuthState)
@@ -105,9 +106,15 @@ function Home() {
   }, [])
 
   const sidebarListings = useMemo(() => {
-    if (!selectedState?.mapKey) return allListings
-    return listingsByCityKey[selectedState.mapKey] ?? []
-  }, [selectedState, allListings, listingsByCityKey])
+    const base = !selectedState?.mapKey
+      ? allListings
+      : listingsByCityKey[selectedState.mapKey] ?? []
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return base
+    return base.filter((listing) =>
+      String(listing.title ?? '').toLowerCase().includes(q),
+    )
+  }, [selectedState, allListings, listingsByCityKey, searchQuery])
 
   const handleStateClick = (point) => {
     setSelectedState((prev) => (prev?.mapKey === point.mapKey ? null : point))
@@ -123,7 +130,7 @@ function Home() {
       const cities = parseCities(citiesData)
       const listings = parseListings(listingsData)
       applyMapData(cities, listings)
-      
+
       // Small delay to ensure UI updates before closing modal
       await new Promise(resolve => setTimeout(resolve, 500))
     } catch (err) {
@@ -137,7 +144,11 @@ function Home() {
 
   return (
     <main className="map-page">
-      <Navbar />
+      <Navbar
+        searchQuery={searchQuery}
+        onSearchChange={(e) => setSearchQuery(e.target.value)}
+        autoNavigateToGridOnEnter={false}
+      />
       <div className="map-body">
         <aside className="map-sidebar">
           <div className="map-sidebar-header">
