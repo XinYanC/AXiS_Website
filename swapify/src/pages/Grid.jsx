@@ -7,6 +7,7 @@ import CreateListing from '../components/CreateListing'
 import PostIconsHelp from '../components/PostIconsHelp'
 import { getListingImageUrls } from '../utils/images'
 import { formatGeoLocation } from '../utils/geo'
+import { filterListings } from '../utils/listingFilters'
 import '../styles/createListing.css'
 import '../styles/postIconsHelp.css'
 
@@ -82,25 +83,7 @@ function Grid() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Filter listings client-side
-  const filteredListings = listings.filter((listing) => {
-    // Location filter (city, state, or country)
-    const city = String(listing.city || '').toLowerCase()
-    const filterCity = String(filters.city || '').toLowerCase()
-    const matchesCity = !filterCity || city.includes(filterCity)
-
-    // Price filter (max price)
-    const price = Number(listing.price)
-    const filterPrice = Number(filters.price)
-    const matchesPrice = !filterPrice || price <= filterPrice
-
-    // Transaction type filter
-    const transactionType = String(listing.transaction_type || '').toLowerCase()
-    const filterType = String(filters.transactionType || '').toLowerCase()
-    const matchesType = !filterType || transactionType === filterType
-
-    return matchesCity && matchesPrice && matchesType
-  })
+  const filteredListings = filterListings(listings, { filters })
 
   useEffect(() => {
     const syncAuthState = () => {

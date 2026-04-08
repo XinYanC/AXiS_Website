@@ -6,6 +6,7 @@ import MapVisualizer from '../components/MapVisualizer'
 import CreateListing from '../components/CreateListing'
 import MapListingCard from '../components/MapListingCard'
 import { buildCityMapModel } from '../utils/cityMapData'
+import { filterListings } from '../utils/listingFilters'
 import '../styles/map.css'
 
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase()
@@ -61,6 +62,7 @@ function Home() {
   const [listingsByCityKey, setListingsByCityKey] = useState({})
   const [selectedState, setSelectedState] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filters, setFilters] = useState({ city: '', price: '', transactionType: '' })
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [authState, setAuthState] = useState(getAuthState)
@@ -109,12 +111,8 @@ function Home() {
     const base = !selectedState?.mapKey
       ? allListings
       : listingsByCityKey[selectedState.mapKey] ?? []
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return base
-    return base.filter((listing) =>
-      String(listing.title ?? '').toLowerCase().includes(q),
-    )
-  }, [selectedState, allListings, listingsByCityKey, searchQuery])
+    return filterListings(base, { searchQuery, filters })
+  }, [selectedState, allListings, listingsByCityKey, searchQuery, filters])
 
   const handleStateClick = (point) => {
     setSelectedState((prev) => (prev?.mapKey === point.mapKey ? null : point))
@@ -147,6 +145,8 @@ function Home() {
       <Navbar
         searchQuery={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
+        filters={filters}
+        onFilterChange={setFilters}
         autoNavigateToGridOnEnter={false}
       />
       <div className="map-body">

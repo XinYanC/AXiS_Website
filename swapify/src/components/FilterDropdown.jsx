@@ -10,6 +10,10 @@ const FilterDropdown = ({ filters, onChange, onClose }) => {
   const [transactionTypes, setTransactionTypes] = useState([])
 
   useEffect(() => {
+    setLocalFilters(filters || {})
+  }, [filters])
+
+  useEffect(() => {
     const load = async () => {
       try {
         const data = await getSystemDropdownForm()
