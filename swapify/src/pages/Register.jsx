@@ -45,8 +45,17 @@ const Register = () => {
       }
 
       await createUser(payload)
-      // Redirect to home page on success
-      navigate('/')
+
+      // Keep auth state consistent with Login flow so navbar updates immediately.
+      localStorage.removeItem('swapify.username')
+      localStorage.removeItem('swapify.email')
+      localStorage.removeItem('swapify.authenticated')
+
+      localStorage.setItem('swapify.username', String(username).trim())
+      localStorage.setItem('swapify.email', String(email).trim())
+      localStorage.setItem('swapify.authenticated', 'true')
+
+      navigate('/', { replace: true })
     } catch (err) {
       let errorMessage = 'Registration failed. Please try again.'
 
