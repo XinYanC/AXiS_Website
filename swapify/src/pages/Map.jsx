@@ -1,11 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { readCities } from '../api/cities'
 import { readListings } from '../api/listings'
 import Navbar from '../components/Navbar'
 import MapVisualizer from '../components/MapVisualizer'
-import { getListingImageUrls } from '../utils/images'
-import { formatGeoLocation } from '../utils/geo'
+import MapListingCard from '../components/MapListingCard'
 import { buildCityMapModel } from '../utils/cityMapData'
 import '../styles/map.css'
 
@@ -21,26 +19,6 @@ function parseListings(listingsData) {
   }
   if (Array.isArray(listingsData)) return listingsData
   return []
-}
-
-function MapListingCard({ listing }) {
-  const images = getListingImageUrls(listing)
-  const price = listing.price != null ? `$${listing.price}` : 'Free'
-
-  return (
-    <Link to={`/post/${listing._id}`} className="map-listing-card">
-      {images.length > 0 ? (
-        <img className="map-listing-card-img" src={images[0]} alt={listing.title} />
-      ) : (
-        <div className="map-listing-card-img-placeholder">📦</div>
-      )}
-      <div className="map-listing-card-info">
-        <p className="map-listing-card-title">{listing.title}</p>
-        <p className="map-listing-card-location">{formatGeoLocation(listing)}</p>
-        <p className="map-listing-card-price">{price}</p>
-      </div>
-    </Link>
-  )
 }
 
 function Map() {

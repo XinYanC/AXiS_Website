@@ -79,19 +79,12 @@
   flex-direction: row;
   gap: 10px;
   padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #f1f5f9;
   cursor: pointer;
   transition: box-shadow 0.15s;
   text-decoration: none;
   color: inherit;
   background: #fff;
   flex: 1;
-}
-
-.map-listing-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-color: #e2e8f0;
 }
 
 .map-listing-card-wrapper {
@@ -148,9 +141,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.2);
   }
+
   100% {
     transform: scale(1);
   }
