@@ -66,21 +66,9 @@
   color: white;
 }
 
-.notification-success::before {
-  content: '✓';
-  display: inline-block;
-  font-weight: bold;
-}
-
 .notification-error {
   background: #ef4444;
   color: white;
-}
-
-.notification-error::before {
-  content: '✕';
-  display: inline-block;
-  font-weight: bold;
 }
 
 .notification-info {

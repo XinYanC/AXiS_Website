@@ -254,7 +254,7 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
         if (!isComplete) {
           isComplete = true
           updateNotification(notifId, {
-            message: 'Saved',
+            message: '✓ Saved',
             type: 'success'
           })
 
