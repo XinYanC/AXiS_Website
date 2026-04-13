@@ -6,7 +6,7 @@ import MapVisualizer from '../components/MapVisualizer'
 import CreateListing from '../components/CreateListing'
 import MapListingCard from '../components/MapListingCard'
 import { buildCityMapModel } from '../utils/cityMapData'
-import { filterListings } from '../utils/listingFilters'
+import { excludeSoldListings, filterListings } from '../utils/listingFilters'
 import '../styles/map.css'
 
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase()
@@ -68,8 +68,9 @@ function Home() {
 
   // useCallback to memoize the applyMapData function
   const applyMapData = useCallback((cities, listings) => {
-    setAllListings(listings)
-    const { points: pts, listingsByCityKey: byKey } = buildCityMapModel(cities, listings)
+    const visibleListings = excludeSoldListings(listings)
+    setAllListings(visibleListings)
+    const { points: pts, listingsByCityKey: byKey } = buildCityMapModel(cities, visibleListings)
     setPoints(pts)
     setListingsByCityKey(byKey)
   }, [])

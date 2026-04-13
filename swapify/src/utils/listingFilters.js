@@ -2,8 +2,15 @@ import { formatGeoLocation } from './geo'
 
 const normalize = (value) => String(value || '').trim().toLowerCase()
 
-export function filterListings(listings, { searchQuery = '', filters = {} } = {}) {
+export const isListingSold = (listing) => normalize(listing?.status) === 'sold'
+
+export const excludeSoldListings = (listings) => {
   const source = Array.isArray(listings) ? listings : []
+  return source.filter((listing) => !isListingSold(listing))
+}
+
+export function filterListings(listings, { searchQuery = '', filters = {} } = {}) {
+  const source = excludeSoldListings(listings)
   const q = normalize(searchQuery)
   const cityFilter = normalize(filters.city)
   const transactionTypeFilter = normalize(filters.transactionType)

@@ -5,6 +5,7 @@ import Post from '../components/post'
 import { readListings, readUsers } from '../api'
 import { getListingImageUrls } from '../utils/images'
 import { formatGeoLocation } from '../utils/geo'
+import { isListingSold } from '../utils/listingFilters'
 import '../styles/savedItems.css';
 
 const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
@@ -144,17 +145,21 @@ const SavedItems = () => {
         ) : (
           <div className="saved-items-grid">
             {filteredSavedListings.map((listing) => (
-              <Post
+              <div
                 key={listing._id}
-                id={listing._id}
-                title={listing.title}
-                description={listing.description}
-                imageUrls={getListingImageUrls(listing)}
-                location={formatGeoLocation(listing)}
-                transactionType={listing.transaction_type}
-                price={listing.price}
-                owner={listing.owner}
-              />
+                className={`saved-item-card ${isListingSold(listing) ? 'sold' : ''}`}
+              >
+                <Post
+                  id={listing._id}
+                  title={listing.title}
+                  description={listing.description}
+                  imageUrls={getListingImageUrls(listing)}
+                  location={formatGeoLocation(listing)}
+                  transactionType={listing.transaction_type}
+                  price={listing.price}
+                  owner={listing.owner}
+                />
+              </div>
             ))}
           </div>
         )}

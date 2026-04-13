@@ -27,6 +27,32 @@
     margin-top: 24px;
 }
 
+.saved-item-card.sold .post-image,
+.saved-item-card.sold .image-placeholder,
+.saved-item-card.sold .price-overlay,
+.saved-item-card.sold .post-image-nav,
+.saved-item-card.sold .post-image-count {
+    filter: blur(3px) saturate(0.85);
+}
+
+.saved-item-card.sold .post-image-container::after {
+    content: 'SOLD';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #ffffff;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    z-index: 3;
+    pointer-events: none;
+}
+
 .saved-items-state {
     margin: 40px auto;
     text-align: center;
