@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import FullLogo from '../assets/FullLogo.PNG'
 import ProfileAvatar from './ProfileAvatar'
 import FilterDropdown from './FilterDropdown'
+import ProfileMenuDropdown from './ProfileMenuDropdown'
 import { FiSliders, FiGrid, FiMap, FiHeart } from 'react-icons/fi'
 
 const DEFAULT_NAV_FILTERS = {
@@ -36,7 +37,7 @@ function Navbar({
   onSearchChange,
   onSearchSubmit,
   autoNavigateToGridOnEnter = true,
-  showLogoutButton = false,
+  showLogoutButton = true,
   onLogout,
   filters = DEFAULT_NAV_FILTERS,
   onFilterChange,
@@ -45,6 +46,8 @@ function Navbar({
   const navigate = useNavigate()
   const [authState, setAuthState] = useState(getAuthState)
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const profileMenuRef = useRef(null)
 
   useEffect(() => {
     const syncAuthState = () => {
@@ -63,6 +66,26 @@ function Navbar({
   useEffect(() => {
     setLocalSearchQuery(searchQuery || '')
   }, [searchQuery])
+
+  useEffect(() => {
+    if (!showProfileMenu) {
+      return undefined
+    }
+
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showProfileMenu])
 
   const handleSearchChange = (e) => {
     const nextValue = e.target.value
@@ -92,6 +115,19 @@ function Navbar({
   const savedItemsPath = authState.username
     ? `/saved-items/${encodeURIComponent(profileIdentifier)}`
     : '/login'
+
+  const handleLogout = () => {
+    if (typeof onLogout === 'function') {
+      onLogout()
+    } else {
+      localStorage.removeItem('swapify.authenticated')
+      localStorage.removeItem('swapify.username')
+      localStorage.removeItem('swapify.email')
+      setAuthState(getAuthState())
+      navigate('/login', { replace: true })
+    }
+    setShowProfileMenu(false)
+  }
 
 
 
@@ -154,14 +190,26 @@ function Navbar({
             <Link to={savedItemsPath} className="nav-saved-items-link" aria-label="Saved Items" title="Saved Items">
               <FiHeart size={24} />
             </Link>
-            <Link to={profilePath} className="nav-profile-link" aria-label="Profile">
-              <ProfileAvatar value={profileIdentifier} className="nav-profile-avatar" />
-            </Link>
-            {showLogoutButton && typeof onLogout === 'function' ? (
-              <button type="button" className="nav-logout-button" onClick={onLogout}>
-                Logout
+            <div className="nav-profile-menu" ref={profileMenuRef}>
+              <button
+                type="button"
+                className="nav-profile-button"
+                aria-label="Profile menu"
+                aria-haspopup="menu"
+                aria-expanded={showProfileMenu}
+                onClick={() => setShowProfileMenu((prev) => !prev)}
+              >
+                <ProfileAvatar value={profileIdentifier} className="nav-profile-avatar" />
               </button>
-            ) : null}
+              {showProfileMenu ? (
+                <ProfileMenuDropdown
+                  profilePath={profilePath}
+                  onClose={() => setShowProfileMenu(false)}
+                  onLogout={handleLogout}
+                  showLogout={showLogoutButton}
+                />
+              ) : null}
+            </div>
           </>
         ) : (
           <Link to="/login" className="nav-login-button">
