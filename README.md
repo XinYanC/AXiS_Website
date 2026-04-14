@@ -1,5 +1,7 @@
 <p align="center">
 	<img src="swapify/src/assets/FullLogo.PNG" alt="Swapify" width="230" />
+	<h3 align="center">By Team AXiS</h1>
+	<p align="center"> Team Members: Moayad Alismail, XinYan Chen, Si Yue Jiang, and Aisha Roslan</p>
 </p>
 
 ---
