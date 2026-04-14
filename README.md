@@ -204,6 +204,7 @@ Here are some stretch goals that were met:
 
 ## Future Plans
 
+- [ ] Email verification during registration (users receive a code via email and must enter it to complete sign-up)
 - [ ] Distance-radius filtering (search/filter items within 1 mile, 5 miles, etc.)
 - [ ] School affiliation and dorm-based filtering
 - [ ] Proximity-based recommendations (show items "near you")
