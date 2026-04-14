@@ -3,6 +3,10 @@ import { MemoryRouter } from 'react-router-dom'
 import { render, screen } from '@testing-library/react'
 import App from '../App.jsx'
 
+vi.mock('../../utils/likeSync.js', () => ({
+  reinitializeCacheOnPageLoad: vi.fn().mockResolvedValue(undefined),
+}))
+
 describe('App routing', () => {
   beforeEach(() => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
@@ -12,25 +16,25 @@ describe('App routing', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders Home at root path', () => {
+  it('renders Home at root path', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <App />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('img', { name: /swapify/i })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: /swapify/i })).toBeInTheDocument()
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 
-  it('renders NotFound for unknown route', () => {
+  it('renders NotFound for unknown route', async () => {
     render(
       <MemoryRouter initialEntries={['/some/unknown/path']}>
         <App />
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(/404/i)).toBeInTheDocument()
+    expect(await screen.findByText(/404/i)).toBeInTheDocument()
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 })
