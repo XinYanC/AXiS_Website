@@ -1,160 +1,210 @@
-# Swapify
+<p align="center">
+	<img src="swapify/src/assets/FullLogo.PNG" alt="Swapify" width="230" />
+</p>
 
-## AXiS Marketplace Project: Swapify
+---
 
-Frontend Vite: [swapify](swapify).
-Backend Python: [AXiS](https://github.com/XinYanC/AXiS)
+## Demo
 
-## Running the App
+### Previews
 
-### Frontend (Vite)
+<table>
+	<tr>
+		<td align="center"><strong>Home (Map Page)</strong><br /><img src="swapify/src/assets/HomePage.png" alt="Home Page" width="340" /></td>
+		<td align="center"><strong>Grid View</strong><br /><img src="swapify/src/assets/GridViewPage.png" alt="Grid View Page" width="340" /></td>
+	</tr>
+	<tr>
+		<td align="center"><strong>Login</strong><br /><img src="swapify/src/assets/LoginPage.png" alt="Login Page" width="340" /></td>
+		<td align="center"><strong>Register</strong><br /><img src="swapify/src/assets/RegisterPage.png" alt="Register Page" width="340" /></td>
+	</tr>
+	<tr>
+		<td align="center"><strong>Listing Details</strong><br /><img src="swapify/src/assets/ListingPage.png" alt="Listing Page" width="340" /></td>
+		<td align="center"><strong>Saved Listings</strong><br /><img src="swapify/src/assets/SavedPage.png" alt="Saved Listings Page" width="340" /></td>
+	</tr>
+	<tr>
+		<td align="center"><strong>Profile</strong><br /><img src="swapify/src/assets/ProfilePage.png" alt="Profile Page" width="340" /></td>
+		<td></td>
+	</tr>
+</table>
 
-From the repo root:
+---
 
-```bash
-cd swapify
-npm install
+## Inspiration, Goals, and Target Audience
+
+Swapify is a student marketplace inspired by the NYU Swap Store. It was built for students to buy, sell, or get items from other students nearby or within the same school. The app focuses on making student-to-student transactions simple and easy to navigate. The main goals were to:
+
+- make it easy to browse and post student listings
+- support location-aware discovery through map-based browsing and search
+- create a simple flow for login, registration, saving items, and viewing profiles
+
+---
+
+## Initial User Requirements
+
+For the original feature goals and product requirements, see the initial [User Requirements](UserRequirements.md).
+
+---
+
+## App Stack
+
+- **Frontend**: React 19, Vite, React Router, CSS modules/files
+- **Map**: Leaflet + React Leaflet
+- **UI Icons**: React Icons
+- **Data Layer**: API helper modules in `swapify/src/api`
+- **State/Auth**: React hooks + local storage session state
+- **Testing**: Vitest + Testing Library (JSDOM)
+- **Linting**: ESLint
+- **Backend**: AXiS (Python) + MongoDB
+
+---
+
+## Frontend Pages and Main Components
+
+#### Home (Map Page)
+
+```text
+Home (Map Page)
+|_ Navbar
+|_ MapVisualizer
+|_ MapListingCard
+|_ CreateListing
 ```
 
-# Run with local backend (http://127.0.0.1:8000)
+- Main visual browsing page with location-based discovery.
+- Uses `Navbar`, `MapVisualizer`, `MapListingCard`, and `CreateListing`.
+- Lets users explore listings by location and create listings when logged in.
 
-```
-nvm use 22
-source ./local.sh
-```
+#### Grid Page
 
-`local.sh` sets the environment variables and starts the Vite dev server.
-
-# Run with cloud backend (https://xinyanc.pythonanywhere.com)
-
-```
-nvm use 22
-source ./cloud.sh
+```text
+Grid Page
+|_ Navbar
+|_ Post
+|_ CreateListing
 ```
 
-`cloud.sh` sets the environment variables and starts the Vite dev server.
+- Shows listings in a card grid layout.
+- Uses `Navbar`, `Post`, and `CreateListing`.
+- Supports search and filtering across the listing feed.
 
-Then open the local URL printed in the terminal (usually http://localhost:5173).
+#### Login Page
 
-Vite requires Node 20.19+. You can upgrade your Node and run using:
-
-```
-nvm install 22
-nvm use 22
-rm -rf node_modules package-lock.json && npm install
-npm run dev
+```text
+Login Page
+|_ Link (router)
 ```
 
-# Run tests
+- Handles sign-in with email and password.
+- Redirects users to home page after successful login.
 
-Requires Node 22 (same as dev):
+#### Register Page
 
-```
-nvm use 22
-cd swapify
-npm test
-```
-
-To run a specific subset of tests (e.g. only pages or only API):
-
-```
-npm test -- src/pages
-npm test -- src/api
+```text
+Register Page
+|_ Link (router)
+|_ LocationDropdown
 ```
 
-To run in watch mode during development:
+- Handles account creation and basic profile setup.
+- Uses `LocationDropdown` to capture location.
+- Stores auth state after successful registration for immediate app access.
+- Redirects users to home page after successful regristration.
 
-```
-npm run test:watch
-```
+#### Individual Post Page
 
-# Production build
-
-```
-npm run build
-```
-
-### Backend (AXiS)
-
-The backend lives in the separate [AXiS repo](https://github.com/XinYanC/AXiS). Follow that README to install dependencies, configure environment variables, and start the API server. Once running, make sure the frontend points to the backend base URL as described in the AXiS docs.
-
-## Project Structure
-
-The repository has two parts: the frontend app in [swapify](swapify) and the backend in the [AXiS repo](https://github.com/XinYanC/AXiS).
-
-Here is how [Swapify](swapify) is structured:
-
-- [swapify/src/app](swapify/src/app): App shell and root layout (e.g., `App.jsx`).
-- [swapify/src/pages](swapify/src/pages): Page-level components routed by URL (e.g., Home, Login, Item Details).
-- [swapify/src/components](swapify/src/components): Shared UI components used across pages.
-- [swapify/src/api](swapify/src/api): API client helpers and endpoint wrappers.
-- [swapify/src/api/tests](swapify/src/api/__tests__): Placeholder tests for API wrappers.
-- [swapify/src/styles](swapify/src/styles): Global styles.
-- [swapify/public](swapify/public): Static assets served by Vite.
-
-```
-swapify/
-|_ public/
-|_ src/
-  |_ app/
-  |_ pages/
-  |_ components/
-  |_ api/
-    |_ __tests__/
-  |_ styles/
-  |_ assets/
+```text
+Individual Post Page
+|_ Navbar
+|_ ProfileAvatar
 ```
 
-## User Requirements for Swapify
+- Shows one listing in detail.
+- Uses `Navbar` and `ProfileAvatar`.
+- Supports actions such as save/like and viewing seller details/options to "Mark as Sold" for sellers.
 
-### General
+#### Saved Items Page
 
-- **Inspiration**: NYU Swap Store
-- Homepage displaying available items listed by students within proximity or school affiliation
-- Location-aware browsing and search
-- Supports transactions like buying, selling, pickup, and drop-off
+```text
+Saved Items Page
+|_ Navbar
+|_ Post
+```
 
-### Users
+- Shows listings the current user has saved.
+- Uses `Navbar` and `Post`.
+- Supports quick search through saved posts.
 
-- **Target audience**: students
-- Users can create accounts to post items, browse items, and filter by school affiliation and/or location
-- Users can edit and delete their own accounts and posts
-- User authentication is required for transactions of an item (posting, buying, etc.)
-  - Passwords are stored using secure hashing
-- Each user provides:
-  - school affiliation and a verified school email address
-    - School email is validated using a [world university domain database](https://github.com/Hipo/university-domains-list)
-  - a default location or dorm
+#### Profile Page
 
-### Item Post
+```text
+Profile Page
+|_ Navbar
+|_ ProfileAvatar
+|_ Post
+```
 
-- Each item post includes:
-  - a title
-  - description
-  - one or more images
-  - transaction type (buy, sell, pickup, or drop-off)
-  - a geographic location (ZIP code or latitude/longitude)
-- Each item is associated with the user who posted it
-- Users can create, edit, and delete their own item listings
-- Items are stored in a shared, global database
+- Shows user profile details and user-owned listings.
+- Uses `Navbar`, `ProfileAvatar`, and `Post`.
+- Separates active vs sold listings.
 
-### Transactions
+#### App-level Shared Components
 
-- Each item clearly indicates its transaction method
-- Transaction methods include:
-  - buy
-  - sell
-  - donation
-  - pickup
-  - drop-off
-- **Stretch goal**: users receive notifications or confirmations when a transaction is completed
+```text
+App-level Shared
+|_ NotificationBar (rendered in app shell)
+|_ Navbar (used across most pages)
+|_ CreateListing (used in Home and Grid)
+|_ Post (used in Grid, Saved Items, Profile)
+```
 
-### Stretch Goals
+---
 
-- Map or globe-based visualization
-- Items can be searched and filtered by distance radius (e.g., within 1 mile)
-- Items can be searched by ZIP code or geographic coordinates
-- Items can be filtered by school affiliation or dorm
-- Recommend items based on proximity to the user
-- Automatically derive item location from photo metadata when available
-- Transaction notifications
+## Backend
+
+The backend lives in the separate AXiS repository. For setup, data model details, and API behavior, refer to the backend README here: https://github.com/XinYanC/AXiS
+
+The AXiS API is deployed on PythonAnywhere at `https://xinyanc.pythonanywhere.com/`. The frontend communicates with the backend through API helper modules in `swapify/src/api/`:
+
+- `swapify/src/api/listings.js` — read, search, create, and update listings
+- `swapify/src/api/users.js` — read user data, create users, update user profiles
+- `swapify/src/api/auth.js` — handle login and authentication
+- `swapify/src/api/cities.js` — fetch city/location data
+- `swapify/src/api/countries.js` — fetch country data
+- `swapify/src/api/states.js` — fetch state data
+- `swapify/src/api/system.js` — system-level endpoints
+
+---
+
+## Best Accomplishments
+
+- Identified the appropriate data models and determined how to integrate them into the frontend through iterative testing and refinement
+- Implemented the map visualizer as a stretch goal, successfully incorporating it into the browsing experience
+- Engaged in productive team discussions to clearly define desired functionality and scope
+- Effectively prioritized tasks and tracked progress using a Kanban board
+
+---
+
+## Stretch Goals
+
+Here are some stretch goals that were met:
+
+- [x] Map or globe-based visualization
+- [x] Items searchable by ZIP code or geographic coordinates
+
+---
+
+## Blockers and Issues
+
+- Encountered race conditions during frontend refreshes, particularly on the profile page, post page, and saved items flow
+- Frequent database resets and data re-uploads to MongoDB due to ongoing model changes
+- Had to manually create listings from scratch due to the absence of an initial dataset
+- Faced limitations from incomplete or missing geodata in certain countries
+
+---
+
+## Future Plans
+
+- [ ] Distance-radius filtering (search/filter items within 1 mile, 5 miles, etc.)
+- [ ] School affiliation and dorm-based filtering
+- [ ] Proximity-based recommendations (show items "near you")
+- [ ] Transaction notifications (seller/buyer updates, pickup confirmations)
