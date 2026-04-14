@@ -53,8 +53,8 @@ const FilterDropdown = ({ filters, onChange, onClose }) => {
           <span className="filter-location-label">Location</span>
           <LocationDropdown
             legend=""
-            onSelectionChange={({ cityName }) =>
-              setLocalFilters((prev) => ({ ...prev, city: cityName }))
+            onSelectionChange={({ displayLabel }) =>
+              setLocalFilters((prev) => ({ ...prev, city: displayLabel }))
             }
           />
         </div>

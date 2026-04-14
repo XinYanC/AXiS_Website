@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { readCities } from '../api/cities'
 import { readListings } from '../api/listings'
+import { readUsers } from '../api/users'
 import Navbar from '../components/Navbar'
 import MapVisualizer from '../components/MapVisualizer'
 import CreateListing from '../components/CreateListing'
@@ -92,6 +93,49 @@ function Home() {
 
     load()
   }, [applyMapData])
+
+  // Auto-zoom to user's city on page load
+  useEffect(() => {
+    const autoZoomToUserCity = async () => {
+      try {
+        const username = localStorage.getItem('swapify.username')
+        const email = localStorage.getItem('swapify.email')
+
+        if (!username && !email) {
+          return // User not logged in
+        }
+
+        const usersResponse = await readUsers()
+        const usersArray = toUsersArray(usersResponse)
+
+        const currentUser = usersArray.find(u =>
+          normalizeIdentifier(u?.username) === normalizeIdentifier(username) ||
+          normalizeIdentifier(u?.email) === normalizeIdentifier(email)
+        )
+
+        if (!currentUser || !currentUser.city) {
+          return // No city set for user
+        }
+
+        // Find the matching point in the points array
+        const userCity = String(currentUser.city).trim().toLowerCase()
+        const matchingPoint = points.find(point =>
+          normalizeIdentifier(point.label) === normalizeIdentifier(userCity)
+        )
+
+        if (matchingPoint) {
+          setSelectedState(matchingPoint)
+        }
+      } catch (err) {
+        console.error('Failed to auto-zoom to user city:', err)
+      }
+    }
+
+    // Only run if we have points loaded
+    if (points.length > 0 && !selectedState) {
+      autoZoomToUserCity()
+    }
+  }, [points])
 
   useEffect(() => {
     const syncAuthState = () => {
