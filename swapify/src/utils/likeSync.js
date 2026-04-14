@@ -163,6 +163,7 @@ export const toggleLike = async (listingId, username, email) => {
 
 /**
  * Sync a like/save to the backend (background sync with retry)
+ * Optimized to only update current user's data without fetching all users
  */
 const syncLikeToBackend = async (normalizedListingId, shouldLike, username, email, notifId) => {
   // If there's already a request in flight for this listing, wait for it first
@@ -180,7 +181,7 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
 
     while (retryCount < maxRetries) {
       try {
-        // Get all users from backend
+        // Get all users from backend to find current user
         const response = await readUsers()
         const users = response?.User ? Object.values(response.User) : []
 
@@ -219,8 +220,9 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
           // Success - state was already correct
           if (!isComplete) {
             isComplete = true
+            const successMessage = shouldLike ? '✓ Saved' : '✓ Unsaved'
             updateNotification(notifId, {
-              message: '✓ Saved',
+              message: successMessage,
               type: 'success'
             })
             setTimeout(() => {
@@ -235,26 +237,23 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
           saved_listings: newSaved
         })
 
-        // Recalculate total likes from all users
-        const numLikes = users.reduce((count, user) => {
-          const userSaved = user.saved_listings && Array.isArray(user.saved_listings)
-            ? user.saved_listings.map(id => normalizeId(id))
-            : []
-          return userSaved.includes(normalizedListingId) ? count + 1 : count
-        }, 0)
+        const currentLikes = Number(currentUser.num_likes) || 0
+        const likeCountDelta = shouldLike ? 1 : -1
+        const newLikeCount = Math.max(0, currentLikes + likeCountDelta)
         
         // Update listing's like count
         await updateListing(normalizedListingId, {
-          num_likes: numLikes
+          num_likes: newLikeCount
         })
 
-        console.log(`Synced like for ${normalizedListingId}: count=${numLikes}`)
+        console.log(`Synced like for ${normalizedListingId}: count=${newLikeCount}`)
 
         // Update notification to success
         if (!isComplete) {
           isComplete = true
+          const successMessage = shouldLike ? '✓ Saved' : '✓ Unsaved'
           updateNotification(notifId, {
-            message: '✓ Saved',
+            message: successMessage,
             type: 'success'
           })
 

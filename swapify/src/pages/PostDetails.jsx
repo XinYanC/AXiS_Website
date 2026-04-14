@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { readListingById, readUsers, updateListing, updateUser } from '../api'
+import { readUsersWithRetry } from '../api/users'
 import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -87,7 +88,7 @@ function PostDetails() {
     setListing(listingData)
 
     try {
-      const usersResponse = await readUsers()
+      const usersResponse = await readUsersWithRetry()
       const usersArray = toUsersArray(usersResponse)
 
       const ownerRaw = String(listingData.owner || '').trim()
@@ -297,10 +298,6 @@ function PostDetails() {
     ? `/messages?seller=${encodeURIComponent(sellerDisplayName)}&listingId=${encodeURIComponent(id || '')}&listingTitle=${encodeURIComponent(listing?.title || '')}`
     : '/login'
 
-  const sellerRatingValue = Number(seller?.rating)
-  const sellerRating = Number.isFinite(sellerRatingValue) && sellerRatingValue > 0
-    ? sellerRatingValue.toFixed(1)
-    : 'N/A'
   const viewerIdentity = getViewerIdentity()
   const listingOwnerRaw = String(listing?.owner || '').trim()
   const isOwnedByCurrentUser = Boolean(
@@ -422,10 +419,6 @@ function PostDetails() {
                   <div className="post-details-seller-text">
                     <span className="post-details-seller-label">Seller</span>
                     <span className="post-details-seller-name">{sellerDisplayName}</span>
-                    <span className="post-details-seller-rating">
-                      <span className="star-icon">★</span>
-                      {sellerRating}
-                    </span>
                   </div>
                 </div>
               </Link>

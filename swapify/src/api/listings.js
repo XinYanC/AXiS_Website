@@ -85,19 +85,36 @@ export const readListingsByUser = async (username) => {
 }
 
 export const readListingById = async (id) => {
-	const response = await readListings()
-	const listingsArray = response && response.Listings
-		? Object.values(response.Listings)
-		: Array.isArray(response)
-			? response
-			: []
+	const normalizedId = String(id || '').trim()
+	if (!normalizedId) return null
 
-	const normalizedId = String(id || '')
+	// Retry logic to handle race conditions and ensure data is loaded
+	const maxRetries = 3
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		try {
+			const response = await readListings()
+			const listingsArray = response && response.Listings
+				? Object.values(response.Listings)
+				: Array.isArray(response)
+					? response
+					: []
 
-	return (
-		listingsArray.find((listing) => String(listing?._id ?? '') === normalizedId) ||
-		null
-	)
+			const found = listingsArray.find((listing) => String(listing?._id ?? '').trim() === normalizedId)
+			if (found) {
+				return found
+			}
+
+			// If not found and we have retries left, wait and retry
+			if (attempt < maxRetries - 1) {
+				await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)))
+			}
+		} catch (err) {
+			if (attempt === maxRetries - 1) throw err
+			await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)))
+		}
+	}
+
+	return null
 }
 
 export const searchListings = (searchTerm) =>

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Post from '../components/post';
 import ProfileAvatar from '../components/ProfileAvatar';
-import { readUsers } from '../api/users';
+import { readUsers, readUsersWithRetry } from '../api/users';
 import { readListingsByUser } from '../api/listings';
 import '../styles/profile.css';
 import { formatGeoLocation } from '../utils/geo';
@@ -100,7 +100,7 @@ const Profile = () => {
             setError('');
 
             try {
-                const usersResponse = await readUsers();
+                const usersResponse = await readUsersWithRetry();
 
                 const bucket = usersResponse?.User;
                 const usersArray =
