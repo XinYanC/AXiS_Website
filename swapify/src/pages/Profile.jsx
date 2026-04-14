@@ -158,8 +158,6 @@ const Profile = () => {
 
                 const displayUsername =
                     String(profileUser.username || username || '').trim();
-                const ratingNum = Number(profileUser.rating);
-                const rating = Number.isFinite(ratingNum) ? ratingNum : 0;
 
                 const normalizedUser = {
                     ...profileUser,
@@ -167,8 +165,6 @@ const Profile = () => {
                     username: displayUsername,
                     location: formatGeoLocation(profileUser) || 'Unknown location',
                     memberSince: formatDateToMonthYear(profileUser.created_at),
-                    rating,
-                    totalReviews: 0,
                     verified: isVerified,
                     bio: profileUser.bio || 'No bio yet.',
                     stats: {
@@ -274,15 +270,6 @@ const Profile = () => {
                                     <CalendarIcon />
                                     <span>Member since {user.memberSince}</span>
                                 </div>
-                            </div>
-
-                            <div className="profile-rating">
-                                <span className="rating-stars">
-                                    {'★'.repeat(Math.floor(user.rating))}
-                                    {'☆'.repeat(5 - Math.floor(user.rating))}
-                                </span>
-                                <span className="rating-number">{user.rating}</span>
-                                <span className="rating-total">({user.totalReviews} reviews)</span>
                             </div>
 
                             {!isOwnProfile && (
