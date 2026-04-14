@@ -217,9 +217,15 @@ function PostDetails() {
     const nextLiked = !liked
 
     setLiked(nextLiked)
+    
+    // Update the like count immediately
+    const currentLikes = Number(listing?.num_likes) || 0
+    const newLikeCount = nextLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1)
+    setListing((prev) => (prev ? { ...prev, num_likes: newLikeCount } : null))
+    
     pendingLikedRef.current = nextLiked
     void processPendingLikeSync()
-  }, [liked, processPendingLikeSync, navigate])
+  }, [liked, listing?.num_likes, processPendingLikeSync, navigate])
 
   const transactionLabel = useMemo(() => {
     if (!listing?.transaction_type) return 'Not specified'

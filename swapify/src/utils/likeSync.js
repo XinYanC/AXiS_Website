@@ -225,6 +225,9 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
               message: successMessage,
               type: 'success'
             })
+            // Notify all listeners of the actual cache state
+            const isCurrentlyLiked = cachedSavedListings.has(normalizedListingId)
+            notifyCacheChange(normalizedListingId, isCurrentlyLiked)
             setTimeout(() => {
               dismissNotification(notifId)
             }, 2000)
@@ -256,6 +259,9 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
             message: successMessage,
             type: 'success'
           })
+          // Notify all listeners of the actual cache state
+          const isCurrentlyLiked = cachedSavedListings.has(normalizedListingId)
+          notifyCacheChange(normalizedListingId, isCurrentlyLiked)
 
           // Auto-dismiss success after 2 seconds
           setTimeout(() => {
