@@ -146,8 +146,9 @@ export const toggleLike = async (listingId, username, email) => {
     } else {
       cachedSavedListings.add(normalizedListingId)
     }
-    // Notify listeners of the revert
-    notifyCacheChange(normalizedListingId, !shouldLike)
+    // Notify listeners of the actual cache state after revert
+    const actualState = cachedSavedListings.has(normalizedListingId)
+    notifyCacheChange(normalizedListingId, actualState)
     // Update notification to error state
     const errorMessage = shouldLike ? 'Failed to save' : 'Failed to remove'
     updateNotification(notifId, {
