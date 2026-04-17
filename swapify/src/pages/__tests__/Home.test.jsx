@@ -4,9 +4,11 @@ import { render, screen, waitFor } from '@testing-library/react'
 import Home from '../Home.jsx'
 import * as citiesApi from '../../api/cities'
 import * as listingsApi from '../../api/listings'
+import * as usersApi from '../../api/users'
 
 vi.mock('../../api/cities')
 vi.mock('../../api/listings')
+vi.mock('../../api/users')
 
 vi.mock('../../components/MapVisualizer', () => ({
   default: () => <div data-testid="map-visualizer">Map Visualizer</div>,
@@ -28,6 +30,8 @@ describe('Home page (Map view)', () => {
       window.localStorage.setItem('swapify.username', 'testuser')
       window.localStorage.setItem('swapify.email', 'testuser@example.com')
     }
+
+    vi.mocked(usersApi.readUsers).mockResolvedValue({ User: {} })
 
     vi.mocked(citiesApi.readCities).mockResolvedValue({
       Cities: {

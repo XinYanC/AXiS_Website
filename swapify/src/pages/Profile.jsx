@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Post from '../components/post';
 import ProfileAvatar from '../components/ProfileAvatar';
-import { readUsers, readUsersWithRetry } from '../api/users';
+import { readUsersWithRetry } from '../api/users';
 import { readListingsByUser } from '../api/listings';
 import '../styles/profile.css';
 import { formatGeoLocation } from '../utils/geo';

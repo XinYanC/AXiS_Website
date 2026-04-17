@@ -11,7 +11,7 @@ import {
 
 function MapListingCard({ listing }) {
   const navigate = useNavigate()
-  const [liked, setLiked] = useState(false)
+  const [liked, setLiked] = useState(() => getLikeStateFromCache(listing._id))
   const [isUpdating, setIsUpdating] = useState(false)
 
   const images = getListingImageUrls(listing)
@@ -19,20 +19,23 @@ function MapListingCard({ listing }) {
   const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0
   const formattedPrice = hasPrice
     ? `$${numericPrice.toLocaleString(undefined, {
-        minimumFractionDigits: numericPrice % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-      })}`
+      minimumFractionDigits: numericPrice % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    })}`
     : 'Free'
 
   useEffect(() => {
-    const isLiked = getLikeStateFromCache(listing._id)
-    setLiked(isLiked)
-
     const unsubscribe = subscribeToCacheChanges((listingId, nextIsLiked) => {
       if (listingId === listing._id) {
         setLiked(nextIsLiked)
       }
     })
+
+    const updateLikeState = () => {
+      setLiked(getLikeStateFromCache(listing._id))
+    }
+
+    updateLikeState()
 
     return unsubscribe
   }, [listing._id])

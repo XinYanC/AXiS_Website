@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { readListingById, readUsers, updateListing, updateUser } from '../api'
+import { readListingById, updateListing } from '../api'
 import { readUsersWithRetry } from '../api/users'
 import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync'
 import Navbar from '../components/Navbar'
@@ -227,14 +227,6 @@ function PostDetails() {
     void processPendingLikeSync()
   }, [liked, listing?.num_likes, processPendingLikeSync, navigate])
 
-  const transactionLabel = useMemo(() => {
-    if (!listing?.transaction_type) return 'Not specified'
-    return String(listing.transaction_type)
-      .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-  }, [listing?.transaction_type])
-
   // Button text based on transaction type
   const getBuyButtonText = () => {
     if (isOwnedByCurrentUser) return isSold ? 'Sold' : 'Mark as Sold'
@@ -300,9 +292,6 @@ function PostDetails() {
     seller?.name || seller?.username || listing?.owner || 'Unknown seller'
 
   const sellerProfilePath = sellerUsername ? `/profile/${encodeURIComponent(sellerUsername)}` : '/login'
-  const messageSellerPath = sellerUsername
-    ? `/messages?seller=${encodeURIComponent(sellerDisplayName)}&listingId=${encodeURIComponent(id || '')}&listingTitle=${encodeURIComponent(listing?.title || '')}`
-    : '/login'
 
   const viewerIdentity = getViewerIdentity()
   const listingOwnerRaw = String(listing?.owner || '').trim()
@@ -353,7 +342,7 @@ function PostDetails() {
     setSearchQuery(e.target.value)
   }
 
-  const handleSearchSubmit = (e) => {
+  const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
       navigate(`/grid?search=${encodeURIComponent(searchQuery.trim())}`)
     }

@@ -64,7 +64,11 @@ function Navbar({
   }, [])
 
   useEffect(() => {
-    setLocalSearchQuery(searchQuery || '')
+    const updateLocalSearchQuery = () => {
+      setLocalSearchQuery(searchQuery || '')
+    }
+
+    updateLocalSearchQuery()
   }, [searchQuery])
 
   useEffect(() => {

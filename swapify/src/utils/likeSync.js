@@ -6,7 +6,6 @@ const normalizeId = (id) => String(id || '').trim()
 
 // Cache for current user's saved listings
 let cachedSavedListings = new Set() // normalized listing IDs
-let cacheKey = null // Current user identifier
 
 // Track in-flight requests to prevent race conditions
 const inFlightRequests = new Map() // listingId -> Promise
@@ -43,8 +42,6 @@ export const initializeLikeCache = async (username, email) => {
     username: normalizeId(username).toLowerCase(),
     email: normalizeId(email).toLowerCase()
   }
-  
-  cacheKey = normalized.username || normalized.email
 
   try {
     const response = await readUsers()
@@ -93,7 +90,6 @@ export const reinitializeCacheOnPageLoad = async () => {
  */
 export const clearLikeCache = () => {
   cachedSavedListings.clear()
-  cacheKey = null
 }
 
 /**

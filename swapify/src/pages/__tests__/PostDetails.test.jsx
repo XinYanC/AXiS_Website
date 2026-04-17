@@ -2,13 +2,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { render, screen } from '@testing-library/react'
 import PostDetails from '../PostDetails.jsx'
-import { readListingById, readUsers } from '../../api'
+import { readListingById } from '../../api'
+import * as usersApi from '../../api/users'
 
 vi.mock('../../api', () => ({
   readListingById: vi.fn(),
-  readUsers: vi.fn(),
   updateListing: vi.fn().mockResolvedValue({}),
-  updateUser: vi.fn().mockResolvedValue({}),
+}))
+
+vi.mock('../../api/users', () => ({
+  readUsersWithRetry: vi.fn(),
 }))
 
 vi.mock('../../components/Navbar', () => ({
@@ -34,7 +37,7 @@ describe('PostDetails', () => {
     localStorage.clear()
     vi.clearAllMocks()
     readListingById.mockResolvedValue(listing)
-    readUsers.mockResolvedValue({
+    vi.mocked(usersApi.readUsersWithRetry).mockResolvedValue({
       User: {
         alice: {
           username: 'alice',

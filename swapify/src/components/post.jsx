@@ -38,27 +38,6 @@ const CameraIcon = () => (
     </svg>
 );
 
-const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase();
-
-const toUsersArray = (usersResponse) => {
-    const bucket = usersResponse?.User;
-    if (bucket) {
-        return Object.values(bucket);
-    }
-    return [];
-};
-
-const resolveSavedPostIds = (user) => {
-    if (!user) {
-        return [];
-    }
-    const savedField = user?.saved_listings;
-    if (!Array.isArray(savedField)) {
-        return [];
-    }
-    return savedField.map((item) => String(item || '').trim()).filter(Boolean);
-};
-
 const Post = ({
     id,
     title,
@@ -83,19 +62,25 @@ const Post = ({
     }, [imageUrls, imageUrl]);
 
     useEffect(() => {
-        setCurrentImageIndex(0);
-        setImageErrors({});
+        const updateCurrentImageIndex = () => {
+            setCurrentImageIndex(0);
+            setImageErrors({});
+        }
+
+        updateCurrentImageIndex()
+
     }, [id, resolvedImageUrls]);
 
     // Load liked state from cache on mount and subscribe to changes
     useEffect(() => {
-        if (!id) {
-            setLiked(false);
-            return;
+        const updateLikedState = () => {
+            if (!id) {
+                setLiked(false);
+            } else {
+                const isLiked = getLikeStateFromCache(id);
+                setLiked(isLiked);
+            }
         }
-
-        const isLiked = getLikeStateFromCache(id);
-        setLiked(isLiked);
 
         // Subscribe to cache changes to revert UI if sync fails
         const unsubscribe = subscribeToCacheChanges((listingId, isLiked) => {
@@ -103,6 +88,8 @@ const Post = ({
                 setLiked(isLiked);
             }
         });
+
+        updateLikedState()
 
         return unsubscribe;
     }, [id]);

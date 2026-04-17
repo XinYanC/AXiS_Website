@@ -10,7 +10,11 @@ const FilterDropdown = ({ filters, onChange, onClose }) => {
   const [transactionTypes, setTransactionTypes] = useState([])
 
   useEffect(() => {
-    setLocalFilters(filters || {})
+    const updateFilter = () => {
+      setLocalFilters(filters || {})
+    }
+
+    updateFilter()
   }, [filters])
 
   useEffect(() => {

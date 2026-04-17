@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: envWithReactPrefix,
     test: {
-      environment: 'jsdom',
+      environment: 'happy-dom',
       setupFiles: './src/test/setup.js',
       include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
     },

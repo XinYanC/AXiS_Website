@@ -135,7 +135,7 @@ export const showSaveNotification = async (promise, listingId) => {
     setTimeout(() => {
       dismissNotification(notifId)
     }, 2000)
-  } catch (err) {
+  } catch {
     updateNotification(notifId, {
       message: '✗ Failed to save',
       type: 'error'

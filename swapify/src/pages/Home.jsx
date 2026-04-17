@@ -20,17 +20,6 @@ const toUsersArray = (usersResponse) => {
   return []
 }
 
-const resolveSavedPostIds = (user) => {
-  if (!user) {
-    return []
-  }
-  const savedField = user?.saved_listings
-  if (!Array.isArray(savedField)) {
-    return []
-  }
-  return savedField.map((item) => String(item || '').trim()).filter(Boolean)
-}
-
 const getAuthState = () => {
   const isLoggedIn = localStorage.getItem('swapify.authenticated') === 'true'
   const username = localStorage.getItem('swapify.username') || ''
@@ -135,7 +124,8 @@ function Home() {
     if (points.length > 0 && !selectedState) {
       autoZoomToUserCity()
     }
-  }, [points])
+    // Intentionally omit `selectedState` so clearing selection does not re-run auto-zoom.
+  }, [points]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const syncAuthState = () => {
