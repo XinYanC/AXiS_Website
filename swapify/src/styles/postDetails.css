@@ -390,6 +390,26 @@
   border-color: #94a3b8;
 }
 
+.post-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.post-share-button:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
 .post-details-state {
   grid-column: 1 / -1;
   background: #ffffff;

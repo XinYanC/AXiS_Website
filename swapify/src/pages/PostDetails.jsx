@@ -257,6 +257,32 @@ function PostDetails() {
     }
   }
 
+  const [shareFeedback, setShareFeedback] = useState('')
+
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const shareData = {
+      title: listing?.title || 'Swapify listing',
+      text: `Check out "${listing?.title || 'this listing'}" on Swapify`,
+      url,
+    }
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(shareData))) {
+        await navigator.share(shareData)
+        return
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+        setShareFeedback('Link copied!')
+        setTimeout(() => setShareFeedback(''), 2000)
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') {
+        console.error('Share failed:', err)
+      }
+    }
+  }
+
   const priceLabel = useMemo(() => {
     const numericPrice = Number(listing?.price)
     if (Number.isFinite(numericPrice) && numericPrice > 0) {
@@ -486,6 +512,13 @@ function PostDetails() {
                     Message Seller
                   </a>
                 ) : null}
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="post-share-button"
+                >
+                  {shareFeedback || 'Share'}
+                </button>
               </div>
             </div>
 
