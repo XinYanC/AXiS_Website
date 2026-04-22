@@ -89,14 +89,18 @@ const Login = () => {
                 throw new Error('Failed to save login credentials to local storage')
             }
 
-            console.log('Login successful - initializing like cache')
+            console.log('Login successful - initializing like cache for:', verifyEmail)
             // Initialize the like cache in the background (don't wait for it)
             initializeLikeCache(verifyUsername || '', verifyEmail).catch(err => {
                 console.warn('Failed to initialize like cache, will load on demand:', err)
             })
 
-            navigate('/', { replace: true })
+            // Small delay to ensure state is fully set before navigation
+            setTimeout(() => {
+                navigate('/', { replace: true })
+            }, 100)
         } catch (err) {
+            console.error('Login error:', err)
             setError(err.message || 'Login failed')
             // Clear any partial auth state on error
             localStorage.removeItem('swapify.username')
