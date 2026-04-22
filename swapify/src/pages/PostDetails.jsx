@@ -479,7 +479,7 @@ function PostDetails() {
                 )}
                 {!isOwnedByCurrentUser && seller?.email ? (
                   <a
-                    href={`mailto:${encodeURIComponent(seller.email)}`}
+                    href={`mailto:${encodeURIComponent(seller.email)}?subject=${encodeURIComponent(`Interested in your Swapify listing: ${listing?.title || 'your item'}`)}&body=${encodeURIComponent(`Hi ${seller?.username || 'there'},\n\nI saw your listing "${listing?.title || ''}" on Swapify and I'm interested in buying it. Is it still available?\n\nThanks!`)}`}
                     onClick={handleMessageSeller}
                     className="post-message-button"
                   >
