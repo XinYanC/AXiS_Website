@@ -39,6 +39,52 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
     const [isUploadingImages, setIsUploadingImages] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [fieldErrors, setFieldErrors] = useState({})
+
+    const TITLE_MIN = 3
+    const TITLE_MAX = 80
+    const DESCRIPTION_MIN = 10
+    const DESCRIPTION_MAX = 1000
+    const PRICE_MAX = 1000000
+
+    const validateForm = () => {
+        const errors = {}
+        const trimmedTitle = title.trim()
+        const trimmedDescription = description.trim()
+
+        if (!trimmedTitle) {
+            errors.title = 'Title is required.'
+        } else if (trimmedTitle.length < TITLE_MIN) {
+            errors.title = `Title must be at least ${TITLE_MIN} characters.`
+        } else if (trimmedTitle.length > TITLE_MAX) {
+            errors.title = `Title must be ${TITLE_MAX} characters or fewer.`
+        }
+
+        if (!trimmedDescription) {
+            errors.description = 'Description is required.'
+        } else if (trimmedDescription.length < DESCRIPTION_MIN) {
+            errors.description = `Description must be at least ${DESCRIPTION_MIN} characters.`
+        } else if (trimmedDescription.length > DESCRIPTION_MAX) {
+            errors.description = `Description must be ${DESCRIPTION_MAX} characters or fewer.`
+        }
+
+        if (!listingCity || !listingState || !listingCountry) {
+            errors.location = 'Please select country, state, and city.'
+        }
+
+        if (transactionType === 'sell') {
+            const parsedPrice = parseFloat(price)
+            if (price === '' || price == null) {
+                errors.price = 'Price is required when selling.'
+            } else if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
+                errors.price = 'Price must be greater than 0.'
+            } else if (parsedPrice > PRICE_MAX) {
+                errors.price = `Price must be ${PRICE_MAX.toLocaleString()} or less.`
+            }
+        }
+
+        return errors
+    }
 
     const getReadableErrorMessage = (err, fallbackMessage) => {
         if (!(err instanceof Error)) {
@@ -189,23 +235,27 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
         setUploadedImageUrls([])
         setError('')
         setSuccess(false)
+        setFieldErrors({})
         // Close the form
         onClose()
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        setIsLoading(true)
         setError('')
         setSuccess(false)
+
+        const errors = validateForm()
+        setFieldErrors(errors)
+        if (Object.keys(errors).length > 0) {
+            return
+        }
+
+        setIsLoading(true)
 
         try {
             if (!ownerIdentifier) {
                 throw new Error('Could not determine the logged-in user. Please log out and log back in.')
-            }
-
-            if (!listingCity || !listingState || !listingCountry) {
-                throw new Error('Please select country, state, and city.')
             }
 
             const payload = {
@@ -280,17 +330,25 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                                 type="text"
                                 placeholder="Title *"
                                 value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                required
+                                onChange={(e) => {
+                                    setTitle(e.target.value)
+                                    if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }))
+                                }}
+                                aria-invalid={Boolean(fieldErrors.title)}
                             />
+                            {fieldErrors.title && <p className="field-error">{fieldErrors.title}</p>}
 
                             <textarea
                                 placeholder="Description *"
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                required
+                                onChange={(e) => {
+                                    setDescription(e.target.value)
+                                    if (fieldErrors.description) setFieldErrors((prev) => ({ ...prev, description: undefined }))
+                                }}
+                                aria-invalid={Boolean(fieldErrors.description)}
                                 rows={4}
                             />
+                            {fieldErrors.description && <p className="field-error">{fieldErrors.description}</p>}
 
                             <LocationDropdown
                                 legend="Location"
@@ -300,8 +358,10 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                                     setListingCity(cityName ? String(cityName).trim() : '')
                                     setListingState(sc ? String(sc).trim() : '')
                                     setListingCountry(cc ? String(cc).trim() : '')
+                                    if (fieldErrors.location) setFieldErrors((prev) => ({ ...prev, location: undefined }))
                                 }}
                             />
+                            {fieldErrors.location && <p className="field-error">{fieldErrors.location}</p>}
 
                             <div className="image-upload-section">
                                 <label htmlFor="listing-image-upload" className="image-upload-label">
@@ -363,15 +423,21 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                             </div>
 
                             {(transactionType === 'sell') && (
-                                <input
-                                    type="number"
-                                    placeholder="Price *"
-                                    value={price}
-                                    onChange={(e) => setPrice(e.target.value)}
-                                    step="0.01"
-                                    min="0"
-                                    required
-                                />
+                                <>
+                                    <input
+                                        type="number"
+                                        placeholder="Price *"
+                                        value={price}
+                                        onChange={(e) => {
+                                            setPrice(e.target.value)
+                                            if (fieldErrors.price) setFieldErrors((prev) => ({ ...prev, price: undefined }))
+                                        }}
+                                        step="0.01"
+                                        min="0"
+                                        aria-invalid={Boolean(fieldErrors.price)}
+                                    />
+                                    {fieldErrors.price && <p className="field-error">{fieldErrors.price}</p>}
+                                </>
                             )}
 
                             <button type="submit" disabled={isLoading || isUploadingImages} className="submit-button">

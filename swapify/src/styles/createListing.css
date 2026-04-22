@@ -1,3 +1,14 @@
+.field-error {
+    color: #c0392b;
+    font-size: 0.85rem;
+    margin: -8px 0 8px;
+}
+
+.create-listing-form input[aria-invalid="true"],
+.create-listing-form textarea[aria-invalid="true"] {
+    border-color: #c0392b;
+}
+
 .create-listing-overlay {
     position: fixed;
     top: 0;
