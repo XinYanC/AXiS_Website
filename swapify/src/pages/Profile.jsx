@@ -5,6 +5,7 @@ import Post from '../components/post';
 import ProfileAvatar from '../components/ProfileAvatar';
 import { readUsersWithRetry } from '../api/users';
 import { readListingsByUser } from '../api/listings';
+import { handleLogout as logoutHandler } from '../utils/logoutHandler';
 import '../styles/profile.css';
 import { formatGeoLocation } from '../utils/geo';
 
@@ -190,10 +191,7 @@ const Profile = () => {
     }, [username]);
 
     const handleLogout = useCallback(() => {
-        localStorage.removeItem('swapify.authenticated');
-        localStorage.removeItem('swapify.username');
-        localStorage.removeItem('swapify.email');
-        navigate('/login', { replace: true });
+        logoutHandler(navigate);
     }, [navigate]);
 
     if (loading) {

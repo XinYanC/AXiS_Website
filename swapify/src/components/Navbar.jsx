@@ -4,6 +4,7 @@ import FullLogo from '../assets/FullLogo.PNG'
 import ProfileAvatar from './ProfileAvatar'
 import FilterDropdown from './FilterDropdown'
 import ProfileMenuDropdown from './ProfileMenuDropdown'
+import { handleLogout as logoutHandler } from '../utils/logoutHandler'
 import { FiSliders, FiGrid, FiMap, FiHeart } from 'react-icons/fi'
 
 const DEFAULT_NAV_FILTERS = {
@@ -124,11 +125,7 @@ function Navbar({
     if (typeof onLogout === 'function') {
       onLogout()
     } else {
-      localStorage.removeItem('swapify.authenticated')
-      localStorage.removeItem('swapify.username')
-      localStorage.removeItem('swapify.email')
-      setAuthState(getAuthState())
-      navigate('/login', { replace: true })
+      logoutHandler(navigate)
     }
     setShowProfileMenu(false)
   }
