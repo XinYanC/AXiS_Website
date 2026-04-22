@@ -376,18 +376,18 @@
   justify-content: center;
   width: 100%;
   text-decoration: none;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #0f172a;
   border-radius: 999px;
-  background: #ffffff;
-  color: #0f172a;
+  background: #0f172a;
+  color: #ffffff;
   font-weight: 600;
   font-size: 0.9rem;
   padding: 10px 12px;
 }
 
 .post-message-button:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #1e293b;
+  border-color: #1e293b;
 }
 
 .post-share-button {

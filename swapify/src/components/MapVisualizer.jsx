@@ -33,7 +33,7 @@ function makeDropperIcon(count, active) {
 }
 
 function MapVisualizer({ points, selectedState, onStateClick }) {
-  const flyZoom = selectedState?.mapKey ? 10 : 7
+  const flyZoom = selectedState?.mapKey ? 12 : 7
 
   return (
     <MapContainer

@@ -127,6 +127,28 @@ function Home() {
     // Intentionally omit `selectedState` so clearing selection does not re-run auto-zoom.
   }, [points]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-zoom to filtered city when a filter is applied
+  useEffect(() => {
+    const autoZoomToFilteredCity = () => {
+      if (!filters.city || !points.length) {
+        return
+      }
+
+      // Extract just the city name from displayLabel (e.g., "New York, NY, USA" -> match to map point)
+      const filterCityNormalized = normalizeIdentifier(filters.city)
+      const matchingPoint = points.find(point =>
+        normalizeIdentifier(point.label).includes(filterCityNormalized) ||
+        filterCityNormalized.includes(normalizeIdentifier(point.label))
+      )
+
+      if (matchingPoint) {
+        setSelectedState(matchingPoint)
+      }
+    }
+
+    autoZoomToFilteredCity()
+  }, [filters.city, points])
+
   useEffect(() => {
     const syncAuthState = () => {
       setAuthState(getAuthState())
@@ -152,6 +174,13 @@ function Home() {
     setSelectedState((prev) => (prev?.mapKey === point.mapKey ? null : point))
   }
 
+  const handleFilterChange = (newFilters) => {
+    // When filter dropdown is used, clear city selection to prioritize the filter
+    setSelectedState(null)
+    setSearchQuery('')
+    setFilters(newFilters)
+  }
+
   const handleListingCreated = async () => {
     // Reload the data after a listing is created
     try {
@@ -172,7 +201,9 @@ function Home() {
 
   const sidebarTitle = selectedState?.mapKey
     ? `${selectedState.label}, ${selectedState.subtitle}`
-    : 'All Listings'
+    : filters.city ? filters.city : 'All Listings'
+
+  const hasActiveFilters = filters.city || filters.price || filters.transactionType
 
   return (
     <main className="map-page">
@@ -180,7 +211,7 @@ function Home() {
         searchQuery={searchQuery}
         onSearchChange={(e) => setSearchQuery(e.target.value)}
         filters={filters}
-        onFilterChange={setFilters}
+        onFilterChange={handleFilterChange}
         autoNavigateToGridOnEnter={false}
       />
       <div className="map-body">
@@ -191,8 +222,12 @@ function Home() {
               {sidebarListings.length} listing
               {sidebarListings.length !== 1 ? 's' : ''}
             </p>
-            {selectedState && (
-              <button type="button" onClick={() => setSelectedState(null)}>
+            {(selectedState || hasActiveFilters) && (
+              <button type="button" onClick={() => {
+                setSelectedState(null)
+                setFilters({ city: '', price: '', transactionType: '' })
+                setSearchQuery('')
+              }}>
                 Show all
               </button>
             )}

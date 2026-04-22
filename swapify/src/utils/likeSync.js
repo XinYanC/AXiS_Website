@@ -309,3 +309,28 @@ const syncLikeToBackend = async (normalizedListingId, shouldLike, username, emai
   return syncPromise
 }
 
+/**
+ * Check if all transaction queues are clear (no in-flight requests)
+ */
+export const areAllRequestsComplete = () => {
+  return inFlightRequests.size === 0
+}
+
+/**
+ * Wait for all in-flight requests to complete with a timeout
+ * @param {number} timeoutMs - Max time to wait (default: 5000ms)
+ * @returns {Promise<void>}
+ */
+export const waitForAllRequestsToComplete = async (timeoutMs = 5000) => {
+  const startTime = Date.now()
+  
+  while (inFlightRequests.size > 0) {
+    if (Date.now() - startTime > timeoutMs) {
+      console.warn('Timeout waiting for all requests to complete')
+      break
+    }
+    
+    // Wait a bit before checking again
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+}
