@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { authLogin, readUsers } from '../api'
-import { initializeLikeCache } from '../utils/likeSync'
 import '../styles/login.css'
 import FullLogo from '../assets/FullLogo.PNG'
 
@@ -11,11 +10,6 @@ const Login = () => {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
-    const location = useLocation()
-
-    // Check if redirected from attempting to like or message
-    const showSaveItemsMessage = location.state?.fromLike === true
-    const showMessageMessage = location.state?.fromMessage === true
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -85,20 +79,10 @@ const Login = () => {
             const verifyEmail = localStorage.getItem('swapify.email')
             const verifyAuth = localStorage.getItem('swapify.authenticated')
 
-            if (!verifyEmail || !verifyAuth) {
+            if (!verifyUsername || !verifyEmail || !verifyAuth) {
                 throw new Error('Failed to save login credentials to local storage')
             }
-
-            console.log('Login successful - initializing like cache for:', verifyEmail)
-            // Initialize the like cache in the background (don't wait for it)
-            initializeLikeCache(verifyUsername || '', verifyEmail).catch(err => {
-                console.warn('Failed to initialize like cache, will load on demand:', err)
-            })
-
-            // Small delay to ensure state is fully set before navigation
-            setTimeout(() => {
-                navigate('/', { replace: true })
-            }, 100)
+            navigate('/', { replace: true })
         } catch (err) {
             console.error('Login error:', err)
             setError(err.message || 'Login failed')
@@ -126,12 +110,6 @@ const Login = () => {
                 <button type="submit" disabled={loading}>{loading ? 'Logging in…' : 'Login'}</button>
             </form>
             <p>Don't have an account? <Link to="/register" className="register-link">Register</Link></p>
-            {showSaveItemsMessage && (
-                <p className="login-info-message">Please login or register to save items</p>
-            )}
-            {showMessageMessage && (
-                <p className="login-info-message">Please login or register to message sellers</p>
-            )}
         </div>
     )
 }

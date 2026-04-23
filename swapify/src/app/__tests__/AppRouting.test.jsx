@@ -3,13 +3,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { render, screen } from '@testing-library/react'
 import App from '../App.jsx'
 
-vi.mock('../../utils/likeSync.js', () => ({
-  reinitializeCacheOnPageLoad: vi.fn().mockResolvedValue(undefined),
-}))
-
 describe('App routing', () => {
   beforeEach(() => {
-    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => { })
   })
 
   afterEach(() => {

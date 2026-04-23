@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { readListingById, updateListing } from '../api'
 import { readUsersWithRetry } from '../api/users'
-import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync'
+import { toggleLike, isListingSaved } from '../utils/likeItems'
 import Navbar from '../components/Navbar'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { getListingImageUrls } from '../utils/images'
@@ -45,8 +45,6 @@ function PostDetails() {
   const [imageErrors, setImageErrors] = useState({})
   const [liked, setLiked] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
-  const pendingLikedRef = useRef(null)
-  const isSyncingRef = useRef(false)
 
   const listingImageUrls = useMemo(() => getListingImageUrls(listing), [listing])
 
@@ -105,10 +103,8 @@ function PostDetails() {
       const viewer = getViewerIdentity()
       const viewerKey = viewer.normalizedUsername || viewer.normalizedEmail
       if (viewerKey) {
-        const normalizedId = String(id).trim()
-        const isLiked = getLikeStateFromCache(normalizedId)
-        console.debug(`PostDetails - Post ${id}, isLiked: ${isLiked}`)
-        setLiked(isLiked)
+        const nextLiked = await isListingSaved(String(id).trim(), viewer.username, viewer.email)
+        setLiked(nextLiked)
       } else {
         setLiked(false)
       }
@@ -138,70 +134,7 @@ function PostDetails() {
     }
   }, [loadData])
 
-  useEffect(() => {
-    // Subscribe to cache changes to revert UI if sync fails
-    const unsubscribe = subscribeToCacheChanges((listingId, isLiked) => {
-      if (listingId === String(id).trim()) {
-        setLiked(isLiked)
-      }
-    })
-
-    return unsubscribe
-  }, [id])
-
-  const processPendingLikeSync = useCallback(async () => {
-    if (isSyncingRef.current || !id) {
-      return
-    }
-
-    isSyncingRef.current = true
-    setIsUpdating(true)
-
-    try {
-      while (pendingLikedRef.current !== null) {
-        const targetLiked = pendingLikedRef.current
-        pendingLikedRef.current = null
-        const listingId = String(id)
-        const viewer = getViewerIdentity()
-
-        try {
-          await toggleLike(listingId, viewer.username, viewer.email)
-        } catch (backendErr) {
-          console.error('Failed to sync save/like with backend:', backendErr)
-          if (pendingLikedRef.current === null) {
-            setLiked(!targetLiked)
-          }
-        }
-      }
-    } finally {
-      isSyncingRef.current = false
-      setIsUpdating(false)
-    }
-  }, [id])
-
-  useEffect(() => {
-    const flushPendingLikeSync = () => {
-      if (pendingLikedRef.current !== null) {
-        void processPendingLikeSync()
-      }
-    }
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        flushPendingLikeSync()
-      }
-    }
-
-    window.addEventListener('pagehide', flushPendingLikeSync)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    return () => {
-      window.removeEventListener('pagehide', flushPendingLikeSync)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [processPendingLikeSync])
-
-  const handleLike = useCallback((e) => {
+  const handleLike = async (e) => {
     if (e) {
       e.stopPropagation()
     }
@@ -214,18 +147,33 @@ function PostDetails() {
       return
     }
 
-    const nextLiked = !liked
+    if (isUpdating) {
+      return
+    }
 
-    setLiked(nextLiked)
-    
-    // Update the like count immediately
-    const currentLikes = Number(listing?.num_likes) || 0
-    const newLikeCount = nextLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1)
-    setListing((prev) => (prev ? { ...prev, num_likes: newLikeCount } : null))
-    
-    pendingLikedRef.current = nextLiked
-    void processPendingLikeSync()
-  }, [liked, listing?.num_likes, processPendingLikeSync, navigate])
+    setIsUpdating(true)
+
+    try {
+      const previousLiked = liked
+      const result = await toggleLike(String(id), viewer.username, viewer.email)
+      setLiked(result.liked)
+
+      if (result.liked !== previousLiked) { // only update listing if liked state changed
+        setListing((prev) => {
+          if (!prev) return prev
+          const currentLikes = prev.num_likes
+          const newLikeCount = result.liked
+            ? currentLikes + 1
+            : Math.max(0, currentLikes - 1)
+          return { ...prev, num_likes: newLikeCount }
+        })
+      }
+    } catch (backendErr) {
+      console.error('Failed to sync save/like with backend:', backendErr)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
 
   // Button text based on transaction type
   const getBuyButtonText = () => {
@@ -465,13 +413,14 @@ function PostDetails() {
                       <button
                         type="button"
                         onClick={handleLike}
+                        disabled={isUpdating}
                         className={`post-details-like-button ${liked ? 'liked' : ''} ${isUpdating ? 'syncing' : ''}`}
                         aria-label={liked ? 'Unlike post' : 'Like post'}
                         aria-busy={isUpdating}
                         style={{
                           background: 'none',
                           border: 'none',
-                          cursor: 'pointer',
+                          cursor: isUpdating ? 'default' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',

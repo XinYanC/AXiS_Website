@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from '../pages/Home.jsx'
 import Grid from '../pages/Grid.jsx'
@@ -6,7 +6,6 @@ import Login from '../pages/Login.jsx'
 import Register from '../pages/Register.jsx'
 import PostDetails from '../pages/PostDetails.jsx'
 import Messages from '../pages/Messages.jsx'
-import { reinitializeCacheOnPageLoad } from '../utils/likeSync.js'
 import NotificationBar from '../components/NotificationBar.jsx'
 import './App.css'
 import Profile from "../pages/Profile.jsx";
@@ -24,75 +23,21 @@ function ScrollToTop() {
 }
 
 function App() {
-  const [cacheReady, setCacheReady] = useState(false)
-
-  useEffect(() => {
-    // Initialize like cache before rendering posts
-    const initializeApp = async () => {
-      try {
-        await reinitializeCacheOnPageLoad()
-      } catch (err) {
-        console.error('Error reinitializing cache on page load:', err)
-      }
-
-      const cleanupMarkerKey = 'swapify.storage-cleanup.saved-likes.v1'
-      const alreadyCleaned = localStorage.getItem(cleanupMarkerKey) === 'true'
-
-      if (!alreadyCleaned) {
-        const keysToRemove = []
-
-        for (let index = 0; index < localStorage.length; index += 1) {
-          const key = localStorage.key(index)
-          if (!key) {
-            continue
-          }
-
-          if (
-            key.startsWith('swapify.saved-listings.') ||
-            key === 'swapify.saved-posts' ||
-            key === 'swapify.savedPosts' ||
-            key === 'swapify.likes' ||
-            key === 'swapify.liked-posts'
-          ) {
-            keysToRemove.push(key)
-          }
-        }
-
-        keysToRemove.forEach((key) => {
-          localStorage.removeItem(key)
-        })
-
-        localStorage.setItem(cleanupMarkerKey, 'true')
-
-        if (keysToRemove.length > 0) {
-          window.dispatchEvent(new CustomEvent('swapify:saved-items-updated'))
-        }
-      }
-
-      // Mark cache as ready to render pages
-      setCacheReady(true)
-    }
-
-    initializeApp()
-  }, [])
-
   return (
     <>
       <NotificationBar />
       <ScrollToTop />
-      {cacheReady && (
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/grid" element={<Grid />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/post/:id" element={<PostDetails />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/profile/:username" element={<Profile />} />
-          <Route path="/saved-items/:username" element={<SavedItems />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      )}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/grid" element={<Grid />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/post/:id" element={<PostDetails />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/profile/:username" element={<Profile />} />
+        <Route path="/saved-items/:username" element={<SavedItems />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   )
 }

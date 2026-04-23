@@ -453,7 +453,7 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                         )}
 
                         {success && (
-                            <p className="success-message">Listing created successfully! It may take a moment to appear in the feed.</p>
+                            <p className="success-message">Listing created successfully!</p>
                         )}
 
                     </>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { normalizeImageList } from '../utils/images';
-import { toggleLike, getLikeStateFromCache, subscribeToCacheChanges } from '../utils/likeSync';
+import { toggleLike, isListingSaved } from '../utils/likeItems';
 import '../styles/post.css';
 
 // SVG Icons as components (exported for use in icon legend/help)
@@ -71,27 +71,39 @@ const Post = ({
 
     }, [id, resolvedImageUrls]);
 
-    // Load liked state from cache on mount and subscribe to changes
+    // Load liked state for logged in user
     useEffect(() => {
-        const updateLikedState = () => {
-            if (!id) {
-                setLiked(false);
-            } else {
-                const isLiked = getLikeStateFromCache(id);
-                setLiked(isLiked);
-            }
+        if (!id) {
+            setLiked(false);
+            return;
         }
 
-        // Subscribe to cache changes to revert UI if sync fails
-        const unsubscribe = subscribeToCacheChanges((listingId, isLiked) => {
-            if (listingId === id) {
-                setLiked(isLiked);
+        const username = localStorage.getItem('swapify.username');
+        const email = localStorage.getItem('swapify.email');
+        if (!username && !email) {
+            setLiked(false);
+            return;
+        }
+
+        let isMounted = true;
+        const loadLikedState = async () => {
+            try {
+                const nextLiked = await isListingSaved(id, username || '', email || '');
+                if (isMounted) {
+                    setLiked(nextLiked); // set liked to true if listing is saved by user, else false
+                }
+            } catch {
+                if (isMounted) {
+                    setLiked(false);
+                }
             }
-        });
+        };
 
-        updateLikedState()
+        loadLikedState();
 
-        return unsubscribe;
+        return () => {
+            isMounted = false;
+        };
     }, [id]);
 
     const numericPrice = Number(price);
@@ -111,7 +123,7 @@ const Post = ({
         return raw.charAt(0).toUpperCase() + raw.slice(1).replace('-', ' ')
     }
 
-    const handleLike = (e) => {
+    const handleLike = async (e) => {
         e.stopPropagation();
 
         if (!id) {
@@ -126,14 +138,14 @@ const Post = ({
             return;
         }
 
-        const nextLiked = !liked;
-        setLiked(nextLiked);
         setIsUpdating(true);
 
-        toggleLike(id, username, email)
-            .finally(() => {
-                setIsUpdating(false);
-            });
+        try {
+            const result = await toggleLike(id, username, email);
+            setLiked(result.liked);
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     const handleOpenPost = () => {
@@ -235,7 +247,9 @@ const Post = ({
                     </p>
                 )}
                 <button
+                    type="button"
                     onClick={handleLike}
+                    disabled={isUpdating}
                     className={`like-button ${liked ? 'liked' : ''} ${isUpdating ? 'syncing' : ''}`}
                     aria-label="Like post"
                     aria-busy={isUpdating}

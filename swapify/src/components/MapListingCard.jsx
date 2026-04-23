@@ -3,15 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { HeartIcon } from './post'
 import { getListingImageUrls } from '../utils/images'
 import { formatGeoLocation } from '../utils/geo'
-import {
-  getLikeStateFromCache,
-  subscribeToCacheChanges,
-  toggleLike,
-} from '../utils/likeSync'
+import { isListingSaved, toggleLike } from '../utils/likeItems'
 
 function MapListingCard({ listing }) {
   const navigate = useNavigate()
-  const [liked, setLiked] = useState(() => getLikeStateFromCache(listing._id))
+  const [liked, setLiked] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
   const images = getListingImageUrls(listing)
@@ -25,22 +21,35 @@ function MapListingCard({ listing }) {
     : 'Free'
 
   useEffect(() => {
-    const unsubscribe = subscribeToCacheChanges((listingId, nextIsLiked) => {
-      if (listingId === listing._id) {
-        setLiked(nextIsLiked)
-      }
-    })
-
-    const updateLikeState = () => {
-      setLiked(getLikeStateFromCache(listing._id))
+    const username = localStorage.getItem('swapify.username')
+    const email = localStorage.getItem('swapify.email')
+    if (!username && !email) {
+      setLiked(false)
+      return undefined
     }
 
-    updateLikeState()
+    let isMounted = true
+    const loadLikedState = async () => {
+      try {
+        const nextLiked = await isListingSaved(listing._id, username || '', email || '')
+        if (isMounted) {
+          setLiked(nextLiked)
+        }
+      } catch {
+        if (isMounted) {
+          setLiked(false)
+        }
+      }
+    }
 
-    return unsubscribe
+    loadLikedState()
+
+    return () => {
+      isMounted = false
+    }
   }, [listing._id])
 
-  const handleLike = (e) => {
+  const handleLike = async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -52,13 +61,14 @@ function MapListingCard({ listing }) {
       return
     }
 
-    const nextLiked = !liked
-    setLiked(nextLiked)
     setIsUpdating(true)
 
-    toggleLike(listing._id, username, email).finally(() => {
+    try {
+      const result = await toggleLike(listing._id, username, email)
+      setLiked(result.liked)
+    } finally {
       setIsUpdating(false)
-    })
+    }
   }
 
   return (
