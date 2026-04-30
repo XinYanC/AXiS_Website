@@ -43,7 +43,6 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
 
     const TITLE_MIN = 3
     const TITLE_MAX = 80
-    const DESCRIPTION_MIN = 10
     const DESCRIPTION_MAX = 1000
     const PRICE_MAX = 1000000
 
@@ -62,8 +61,6 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
 
         if (!trimmedDescription) {
             errors.description = 'Description is required.'
-        } else if (trimmedDescription.length < DESCRIPTION_MIN) {
-            errors.description = `Description must be at least ${DESCRIPTION_MIN} characters.`
         } else if (trimmedDescription.length > DESCRIPTION_MAX) {
             errors.description = `Description must be ${DESCRIPTION_MAX} characters or fewer.`
         }

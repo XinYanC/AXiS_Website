@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import PostDetails from '../PostDetails.jsx'
 import { readListingById } from '../../api'
 import * as usersApi from '../../api/users'
@@ -12,6 +12,7 @@ vi.mock('../../api', () => ({
 
 vi.mock('../../api/users', () => ({
   readUsersWithRetry: vi.fn(),
+  readUsers: vi.fn(),
 }))
 
 vi.mock('../../components/Navbar', () => ({
@@ -19,6 +20,10 @@ vi.mock('../../components/Navbar', () => ({
 }))
 
 describe('PostDetails', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   const listing = {
     _id: 'listing-1',
     title: 'Desk Lamp',
@@ -37,16 +42,26 @@ describe('PostDetails', () => {
     localStorage.clear()
     vi.clearAllMocks()
     readListingById.mockResolvedValue(listing)
-    vi.mocked(usersApi.readUsersWithRetry).mockResolvedValue({
+    const usersPayload = {
       User: {
         alice: {
           username: 'alice',
           email: 'alice@example.com',
           name: 'Alice',
           rating: 4.8,
+          saved_listings: [],
+        },
+        bob: {
+          username: 'bob',
+          email: 'bob@example.com',
+          name: 'Bob',
+          rating: 4.5,
+          saved_listings: [],
         },
       },
-    })
+    }
+    vi.mocked(usersApi.readUsersWithRetry).mockResolvedValue(usersPayload)
+    vi.mocked(usersApi.readUsers).mockResolvedValue(usersPayload)
   })
 
   const renderPostDetails = () =>
@@ -70,15 +85,18 @@ describe('PostDetails', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows View Seller when the listing belongs to another user', async () => {
+  it('shows seller profile and message actions when the listing belongs to another user', async () => {
     localStorage.setItem('swapify.authenticated', 'true')
     localStorage.setItem('swapify.username', 'bob')
     localStorage.setItem('swapify.email', 'bob@example.com')
 
     renderPostDetails()
 
+    const profileLink = await screen.findByRole('link', { name: /alice/i })
+    expect(profileLink).toHaveAttribute('href', '/profile/alice')
+    const messageSellerLinks = screen.getAllByRole('link', { name: /message seller/i })
     expect(
-      await screen.findByRole('link', { name: /view seller/i }),
-    ).toBeInTheDocument()
+      messageSellerLinks.some((el) => el.getAttribute('href')?.startsWith('mailto:')),
+    ).toBe(true)
   })
 })
