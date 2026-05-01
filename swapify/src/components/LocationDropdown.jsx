@@ -8,14 +8,30 @@ function LocationDropdown({
   legend = 'Location',
   required = false,
   onSelectionChange,
+  initialCountryCode = '',
+  initialStateCode = '',
+  initialCityValue = '',
 }) {
   const [countries, setCountries] = useState([])
   const [states, setStates] = useState([])
   const [cities, setCities] = useState([])
-  const [countryCode, setCountryCode] = useState('')
-  const [stateCode, setStateCode] = useState('')
-  const [cityValue, setCityValue] = useState('')
+  const [countryCode, setCountryCode] = useState(initialCountryCode)
+  const [stateCode, setStateCode] = useState(initialStateCode)
+  const [cityValue, setCityValue] = useState(initialCityValue)
   const [geoLoading, setGeoLoading] = useState(false)
+
+  // Update controlled values when props change
+  useEffect(() => {
+    setCountryCode(initialCountryCode)
+  }, [initialCountryCode])
+
+  useEffect(() => {
+    setStateCode(initialStateCode)
+  }, [initialStateCode])
+
+  useEffect(() => {
+    setCityValue(initialCityValue)
+  }, [initialCityValue])
 
   const notify = ({ cityName = '', displayLabel = '', countryCode: cc, stateCode: sc }) => {
     if (typeof onSelectionChange !== 'function') return

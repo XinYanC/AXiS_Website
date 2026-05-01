@@ -33,9 +33,50 @@
   gap: 6px;
 }
 
+.filter-location-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .filter-location-label {
   font-size: 0.98rem;
   color: #222;
+  font-weight: 500;
+}
+
+.filter-auto-locate-btn {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #0ea5e9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.filter-auto-locate-btn:hover:not(:disabled) {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.filter-auto-locate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filter-auto-locate-error {
+  font-size: 0.85rem;
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-top: 2px;
 }
 
 .filter-dropdown input,
