@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import '../styles/register.css'
 import FullLogo from '../assets/FullLogo.PNG'
@@ -24,7 +24,6 @@ const Register = () => {
   const [geoCountryCode, setGeoCountryCode] = useState('')
   const [geoStateCode, setGeoStateCode] = useState('')
   const [geoCityValue, setGeoCityValue] = useState('')
-  const locationDropdownRef = useRef(null)
 
   const normalizeIdentifier = (value) => String(value || '').trim().toLowerCase()
 
