@@ -361,11 +361,12 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                             {fieldErrors.location && <p className="field-error">{fieldErrors.location}</p>}
 
                             <div className="image-upload-section">
-                                <label htmlFor="listing-image-upload" className="image-upload-label">
-                                    Upload Images (optional)
+                                <label htmlFor="listing-image-upload" className="image-upload-button">
+                                    Upload image
                                 </label>
                                 <input
                                     id="listing-image-upload"
+                                    className="image-upload-input"
                                     type="file"
                                     accept="image/*"
                                     multiple
