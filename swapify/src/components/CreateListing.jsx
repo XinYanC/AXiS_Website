@@ -388,8 +388,9 @@ const CreateListing = ({ isOpen, onClose, onSuccess, isLoggedIn, currentUserIden
                                                     type="button"
                                                     className="remove-uploaded-image-button"
                                                     onClick={() => handleRemoveUploadedImage(index)}
+                                                    aria-label={`Remove uploaded image ${index + 1}`}
                                                 >
-                                                    Remove
+                                                    ×
                                                 </button>
                                             </div>
                                         ))}

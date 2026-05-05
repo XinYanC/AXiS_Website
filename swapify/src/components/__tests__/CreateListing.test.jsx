@@ -59,6 +59,7 @@ describe('CreateListing', () => {
     expect(screen.getByRole('button', { name: /create listing/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^free$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^sell$/i })).toBeInTheDocument()
+    expect(screen.getByText('Upload image')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Price *')).toBeInTheDocument()
     expect(screen.queryByPlaceholderText(/owner/i)).not.toBeInTheDocument()
   })
