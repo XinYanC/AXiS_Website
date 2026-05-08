@@ -39,7 +39,13 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm run test
+        run: |
+          set -o pipefail
+          npm run test 2>&1 | tee test.log
+          if grep -qE "DOMException|Unhandled (Error|Rejection)" test.log; then
+            echo "::error::Tests produced unhandled errors during teardown. See log above."
+            exit 1
+          fi
 
       - name: Build app
         run: npm run build
