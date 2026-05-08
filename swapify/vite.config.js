@@ -18,6 +18,16 @@ export default defineConfig(({ mode }) => {
     define: envWithReactPrefix,
     test: {
       environment: 'happy-dom',
+      environmentOptions: {
+        happyDOM: {
+          settings: {
+            navigation: {
+              disableChildFrameNavigation: true,
+              disableChildPageNavigation: true,
+            },
+          },
+        },
+      },
       setupFiles: './src/test/setup.js',
       include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
     },

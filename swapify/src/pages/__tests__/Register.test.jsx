@@ -11,6 +11,15 @@ vi.mock('react-router-dom', async (orig) => {
   }
 })
 
+vi.mock('../../api', async (orig) => {
+  const actual = await orig()
+  return {
+    ...actual,
+    createUser: vi.fn(),
+    getSystemDropdownOptions: vi.fn().mockResolvedValue({ options: [] }),
+  }
+})
+
 describe('Register page', () => {
   it('matches snapshot', () => {
     const { container } = render(

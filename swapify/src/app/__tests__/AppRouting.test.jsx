@@ -3,6 +3,12 @@ import { MemoryRouter } from 'react-router-dom'
 import { render, screen } from '@testing-library/react'
 import App from '../App.jsx'
 
+vi.mock('../../pages/Home.jsx', () => ({
+  default: function MockHome() {
+    return <img alt="Swapify" />
+  },
+}))
+
 describe('App routing', () => {
   beforeEach(() => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => { })
